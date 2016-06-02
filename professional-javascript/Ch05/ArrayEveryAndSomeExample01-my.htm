@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+        <html>
+<head>
+    <title>Array every() and some() Example</title>
+    <script type="text/javascript">
+        var someArray = [1,2,3,4,5];
+        var result = someArray.every(function(item, index, array){
+            return (item > 2);
+        });
+        alert(someArray);
+        alert(result);
+
+        var result2 = someArray.some(function(item, index, array){
+            return (item > 2);
+        });
+        alert(result2);
+
+        var result3 = someArray.filter(function(item, index,array) {
+            return (item > 3);
+        });
+        alert(result3);
+
+        var result4 = someArray.map(function(item, index, array) {
+            return item*2;
+        });
+        alert(result4);
+
+        someArray.forEach(function(item, index, array) {
+            item*2;
+        });
+        alert(someArray);
+
+
+
+    </script>
+</head>
+<body>
+
+</body>
+</html>
