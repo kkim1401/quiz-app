@@ -1,21 +1,32 @@
 /**
  * Created by Kevin_Kim on 6/2/16.
  */
+var form = document.forms[0],
+    colors = form.elements["color"],
+    chosenColor;
 
-var form = document.forms[0];
-var colors = form.elements["color"];
-var chosenColor;
-for (var member in colors) {
-    if (member.checked) {
-        chosenColor = member.text.toLowerCase();
-        break;
+//Manging handler for when the user picks an option.
+document.body.querySelector(".radioList").addEventListener("click", function() {
+    for (var i = 0; i < colors.length; i++) {
+        if (colors[i].checked) {
+            chosenColor = colors[i].value.toLowerCase();
+            break;
+        }
     }
-}
-var handler = function(event) {
-    document.write("<h1>Hello World!</h1>");
-    var h1 = document.querySelector("h1");
+}, false);
+
+//Declaring handler for when the user clicks submit.
+var handler = function (event) {
+    var h1 = document.createElement("h1");
     h1.classList.add(chosenColor);
+    h1.appendChild(document.createTextNode("Hello World!"));
+    document.body.appendChild(h1);
+    event.preventDefault(); //So that the page won't refresh.
+    event.target.elements["myBtn"].disabled = true; //Can only submit once.
 };
-document.body.addEventListener("click", handler, false); //Event Delegation
-//document.body.addEventListener("click", handler, false); //Browsers differ in order of click and submit events.
-document.body.addEventListener("reset", handler, false);
+
+//Adding handlers for submit and reset events. Taking care to utilize event delegation.
+document.body.addEventListener("submit", handler, false);
+document.body.addEventListener("reset", function() {window.location.reload();}, false);
+
+

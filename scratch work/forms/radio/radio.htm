@@ -9,14 +9,16 @@
 <body>
 <p>Which of the following is your favorite color?</p>
 <form method ="post" name ="radio">
-    <ul>
-        <li><input type ="radio" name="color" value="Red">Red</li>
-        <li><input type ="radio" name="color" value="Green">Green</li>
-        <li><input type ="radio" name="color" value="Blue">Blue</li>
-    </ul>
-<button type ="submit">Submit</button>
-<button type ="reset">Reset</button>
+    <p class="radioList">
+        <input type ="radio" name="color" value="Red" id="Red" class="color">
+          <label for="Red">Red</label><br>
+        <input type ="radio" name="color" value="Green" id="Green" class="color">
+          <label for="Green">Green</label><br>
+        <input type ="radio" name="color" value="Blue" id="Blue" class="color">
+          <label for="Blue">Blue</label><br>
+    </p>
+    <button type="submit" name="myBtn">Submit</button>
+    <button type ="reset" name="myResetBtn">Reset</button>
 </form>
 </body>
-
 </html>
