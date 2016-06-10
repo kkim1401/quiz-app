@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Text Boxes</title>
+    <link type ="text/css" rel="stylesheet" href="textboxes.css">
+    <script type ="text/javascript" src="textboxes.js" defer></script>
+</head>
+<body>
+
+<form name ="form1" id="myForm">
+
+
+    <label for ="firstName">First Name</label>
+    <input type ="text" id="firstName" required autofocus>
+
+    <label for ="lastName">Last Name</label>
+    <input type="text" id="lastName" required>
+
+    <label for ="phoneNumber">Phone Number</label>
+    <input type="tel" maxLength="10" id="phoneNumber" required>
+
+    <label for ="email">Email</label>
+    <input type ="email" id="email" required>
+
+    <label for="comments">Comments</label><br>
+    <textarea rows ="20" cols="50" id="comments"></textarea>
+
+    <input type="submit" value ="Submit Form">
+
+
+</form>
+</body>
+</html>
