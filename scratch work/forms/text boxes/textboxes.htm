@@ -9,24 +9,24 @@
 
 <form name ="form1" id="myForm">
 
+    <div id ="blankList">
+        <label for ="firstName">First Name</label>
+        <input type ="text" name="blank" id="firstName" required autofocus>
 
-    <label for ="firstName">First Name</label>
-    <input type ="text" id="firstName" required autofocus>
+        <label for ="lastName">Last Name</label>
+        <input type="text" name="blank" id="lastName" required>
 
-    <label for ="lastName">Last Name</label>
-    <input type="text" id="lastName" required>
+        <label for ="phoneNumber">Phone Number</label>
+        <input type="tel" name="blank" maxLength="10" id="phoneNumber" required>
 
-    <label for ="phoneNumber">Phone Number</label>
-    <input type="tel" maxLength="10" id="phoneNumber" required>
+        <label for ="email">Email</label>
+        <input type ="email" name="blank" id="email" required>
 
-    <label for ="email">Email</label>
-    <input type ="email" id="email" required>
+        <label for="comments">Comments</label><br>
+        <textarea rows ="20" cols="50" id="comments" name="blank"></textarea>
 
-    <label for="comments">Comments</label><br>
-    <textarea rows ="20" cols="50" id="comments"></textarea>
-
-    <input type="submit" value ="Submit Form">
-
+        <input type="submit" value ="Submit Form">
+    </div>
 
 </form>
 </body>
