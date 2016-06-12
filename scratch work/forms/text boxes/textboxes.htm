@@ -7,26 +7,30 @@
 </head>
 <body>
 
-<form name ="form1" id="myForm">
+<form name ="form1" id="myForm" novalidate>
 
-    <div id ="blankList">
-        <label for ="firstName">First Name</label>
+    <fieldset id ="blankList">
+        <label for ="firstName">First Name<abbr title = "This field is required">*</abbr></label>
         <input type ="text" name="blank" id="firstName" required autofocus>
+        <span class ="error"></span>
 
-        <label for ="lastName">Last Name</label>
+        <label for ="lastName">Last Name<abbr title = "This field is required">*</abbr></label>
         <input type="text" name="blank" id="lastName" required>
+        <span class="error"></span>
 
-        <label for ="phoneNumber">Phone Number</label>
-        <input type="tel" name="blank" maxLength="10" id="phoneNumber" required>
+        <label for ="phoneNumber">Phone Number<abbr title = "This field is required">*</abbr></label>
+        <input type="tel" name="blank" maxLength="10" id="phoneNumber" pattern="\d+" required>
+        <span class="error"></span>
 
-        <label for ="email">Email</label>
+        <label for ="email">Email<abbr title = "This field is required">*</abbr></label>
         <input type ="email" name="blank" id="email" required>
+        <span class="error"></span>
 
         <label for="comments">Comments</label><br>
         <textarea rows ="20" cols="50" id="comments" name="blank"></textarea>
 
-        <input type="submit" value ="Submit Form">
-    </div>
+        <input type="submit" id = "myBtn" value ="Submit Form">
+    </fieldset>
 
 </form>
 </body>
