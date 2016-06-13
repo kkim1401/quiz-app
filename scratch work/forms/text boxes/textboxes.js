@@ -11,6 +11,8 @@ var form = document.forms[0],
 /*Today I learned that the focus event does not bubble. That's what focusin is for. I also learned that
 I can use the :focus pseudo-class in css instead of focus events in javascript to highlight focused inputs.
  */
+
+/* If adding focus class instead of just using focus pseudo-class.
 list.addEventListener("focusin", function (event) {
     var target = event.target;
     target.classList.add("focus");
@@ -22,6 +24,13 @@ list.addEventListener("focusout", function (event) {
     var target = event.target;
     target.classList.remove("focus");
 }, false);
+*/
+
+//For convenience.
+list.addEventListener("focusin", function(event){
+    var target = event.target;
+    target.select();
+},false);
 
 //Will not accept characters for phoneNumber entry.
 phoneNumber.addEventListener("keypress", function(event) {
@@ -40,13 +49,16 @@ phoneNumber.addEventListener("paste", function(event) {
     }
 }, false);
 
-list.addEventListener("submit", function(event) {
+//Handles submission.
+form.addEventListener("submit", function(event) {
     if (form.checkValidity()) {
         alert("Form submitted!");
         event.preventDefault();
         button.disabled = true;
     }
     else {
+        event.preventDefault();
+        console.log("else");
         for (var i = 0; i < input.length; i++) {
             if (!input[i].validity.valid) {
                 var error = input[i].nextElementSibling;
@@ -66,14 +78,21 @@ list.addEventListener("submit", function(event) {
                 else {
                     error.innerHTML = "Value is invalid.";
                 }
-                event.preventDefault();
             }
         }
     }
 }, false);
 
+//Removes error when typing.
+form.addEventListener("keyup", function(event) {
+    var target = event.target;
+    target.nextElementSibling.innerHTML = "";
+}, false);
 
-
+//To reset.
+form.addEventListener("reset", function(event) {
+    window.location.reload();
+}, false);
 
 
 

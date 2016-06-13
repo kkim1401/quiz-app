@@ -3,18 +3,24 @@ input {
     margin-bottom: 3px;
 
 }
-
+/* If not using focus pseudo-class.
 .focus {
-    background-color: yellow;
-}
-
-/* Can use pure css instead of focus events in javascript.
-input:focus {
     background-color: yellow;
 }
 */
 
-.error {
-    display: inline;
-    color: red;
+input:focus {
+    background-color: yellow;
 }
+
+.error {
+    color: red;
+    position: absolute;
+    left: 150px;
+
+}
+
+#reset{
+    display: inline;
+}
+
