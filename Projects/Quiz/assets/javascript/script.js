@@ -20,14 +20,31 @@ Question.prototype = {
     }
 };
 
+//Implementing Dan Martensen's basic Subject template for MVC.
+function Subject() {
+    var observers = [];
+    return {
+        add: function(observer) {
+            observers.push(observer);
+        },
+        removeAll: function() {
+            observers.length = 0;
+        },
+        notifyObservers: function() {
+            observers.forEach(function(observer) {
+                observer.notify();
+            });
+        }
+    }
+}
 
 var questions = function() {
-    var questions = [],
+    var subject = Subject(),
+        questions = [],
         numberCorrect = 0,
         totalNumber = 0;
     return {
-
-        getFirstQuestion: function() { //Maybe make this to getFirstQuestion instead, since the other ones in the list don't really matter.
+        getFirstQuestion: function() {
             return questions[0];
         },
         getQuestionsLength: function() {
@@ -52,6 +69,12 @@ var questions = function() {
             if (question.correct) {
                 numberCorrect++;
             }
+        },
+        register: function() {
+            subject.removeAll();
+            arguments.forEach(function(observer){
+                subject.add(observer);
+            });
         }
         };
 }();
@@ -121,8 +144,8 @@ var view = function() {
                 input.name = "choices";
                 input.value = question.answerChoices[i];
                 label.appendChild(input);
-                input.insertAdjacentHTML("afterend", input.value);
                 docFrag.appendChild(label);
+                input.insertAdjacentHTML("afterend", input.value);
             }
             fieldset.appendChild(docFrag);
         },
