@@ -7,18 +7,19 @@ function Question(question, answerChoices, correctIndex) {
     this.answerChoices = answerChoices;
     this.correctIndex = correctIndex;
     this.correct = false;
-    this.answered = false; //Will replace answered boolean and removeAnsweredQuestion method with simple popping of first item of array after next is clicked.
+    //this.answered = false; //Will replace answered boolean and removeAnsweredQuestion method with simple popping of first item of array after next is clicked.
 }
 
 Question.prototype = {
     constructor: Question,
     evaluate: function(index) {
-        this.answered = true;
+        //this.answered = true;
         if (index === this.correctIndex) {
             this.correct = true;
         }
     }
 };
+
 
 var questions = function() {
     var questions = [],
@@ -26,22 +27,17 @@ var questions = function() {
         totalNumber = 0;
     return {
 
-        //Methods for initialization and maintenance
-        getQuestion: function() {
-            return questions;
+        getFirstQuestion: function() { //Maybe make this to getFirstQuestion instead, since the other ones in the list don't really matter.
+            return questions[0];
+        },
+        getQuestionsLength: function() {
+          return questions.length;
         },
         addQuestion: function(question) {
             questions.push(question);
         },
-        removeQuestion: function(question) {
-            questions.splice(questions.indexOf(question), 1);
-        },
-        removeAnsweredQuestion: function() {
-            questions.forEach(function(question) {
-                if (question.answered) {
-                    questions.splice(questions.indexOf(question), 1);
-                }
-            });
+        removeQuestion: function() {
+            questions.shift();
         },
         getTotalNumber: function() {
             return totalNumber;
@@ -52,7 +48,6 @@ var questions = function() {
         calcTotalNumber: function() {
             totalNumber = questions.length;
         },
-        //Methods for conclusion
         calcNumberCorrect: function(question) {
             if (question.correct) {
                 numberCorrect++;
@@ -62,7 +57,7 @@ var questions = function() {
 }();
 
 var handler = {
-    initialize: function(arg) {
+    initialize: function(args) {
         for (var i = 0; i < arguments.length; i++) {
             questions.addQuestion(arguments[i]);
         }
@@ -71,7 +66,7 @@ var handler = {
         this.setUpListener();
     },
     display: function() {
-        view.render(questions.getQuestion()[0]);
+        view.render(questions.getFirstQuestion());
     },
     setUpListener: function() {
         var form = document.forms[0];
@@ -80,16 +75,16 @@ var handler = {
             if (document.getElementsByTagName("fieldset")[0].hasChildNodes()) {
                 console.log("in if statement of analyze");
                 var choices = document.getElementsByName("choices");
+                var question = questions.getFirstQuestion();
                 for (var i = 0; i < choices.length; i++) {
                     if (choices[i].checked) {
-                        var question = questions.getQuestion()[i];
                         question.evaluate(i);
                         questions.calcNumberCorrect(question);
-                        questions.removeQuestion(question);
+                        questions.removeQuestion();
                     }
                 }
                 view.wipe();
-                if(questions.getQuestion().length) {
+                if(questions.getQuestionsLength()) {
                     handler.display();
                 }
                 else {
@@ -133,6 +128,9 @@ var view = function() {
         },
         wipe: function () {
             fieldset.innerHTML = "";
+        },
+        conclude: function() {
+
         }
     };
 }();
