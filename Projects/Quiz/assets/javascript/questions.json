@@ -1,0 +1,22 @@
+[
+  {
+    "question": "Which of the following do weightlifters specialize?",
+    "choices": ["Back Squat", "Clean and Jerk", "Deadlift", "Curls"],
+    "correctIndex": 1
+  },
+  {
+    "question": "What do powerlifters specialize?",
+    "choices": ["Back Squat", "Curls", "Pull-ups"],
+    "correctIndex": 0
+  },
+  {
+    "question":"What do bodybuilders specialize?",
+    "choices": ["Back Squat", "Deadlifts", "Curls", "Tricep Extensions", "None of the Above"],
+    "correctIndex": 4
+  },
+  {
+    "question": "Which of the following is a compound exercise?",
+    "choices": ["Curls", "Bench Press", "Leg Extensions"],
+    "correctIndex": 1
+  }
+]

@@ -1,14 +1,38 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>My Quiz</title>
-        <link rel="stylesheet" href="assets/stylesheets/style.css">
-        <script src="assets/javascript/script.js" defer></script>
-    </head>
-    <body>
+<head>
+    <title>My Quiz</title>
+    <link rel="stylesheet" href="assets/stylesheets/style.css">
+    <script src="assets/javascript/script.js" defer></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+</head>
+<body>
+<section class="login">
     <form>
-        <fieldset></fieldset>
-        <input type="submit" name="submit" value="Next">
+        <fieldset class="account-info">
+            <label>
+                Username<br>
+                <input type="text" name="username" required>
+            </label>
+            <label>
+                Password<br>
+                <input type="text" name="password" required>
+            </label>
+        </fieldset>
+        <fieldset class="actions group">
+            <label>
+                <input type="checkbox" name="remember"> Remember Me?
+            </label>
+            <input type="button" name="submit" value="Login" class="btn">
+        </fieldset>
     </form>
-    </body>
+</section>
+<section class="quiz" style="visibility:hidden">
+<form class="group">
+    <fieldset></fieldset>
+    <input type="button" name="next" id="next" value="Next" class="btn">
+    <button type="button" class="btn btn-alt">Back</button>
+</form>
+</section>
+</body>
 </html>

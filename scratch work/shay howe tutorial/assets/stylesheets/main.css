@@ -179,6 +179,7 @@ cite, em {
 }
 
 /*Leads*/
+
 .lead {
     text-align: center;
 }
@@ -189,6 +190,7 @@ cite, em {
 }
 
 /*Links*/
+
 a {
     color: #648880;
     text-decoration: none;
@@ -213,6 +215,7 @@ p a {
 }
 
 /*Buttons*/
+
 .btn {
     border-radius: 5px;
     color: #fff;
