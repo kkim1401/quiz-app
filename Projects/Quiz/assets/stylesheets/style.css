@@ -54,14 +54,8 @@ table {
 *:before,
 *:after {
     -webkit-box-sizing: border-box;
-       -moz-box-sizing: border-box;
-            box-sizing: border-box;
-}
-
-/* Custom Styles */
-
-body {
-    font: 300 20px/30px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 /* Clearfix */
@@ -81,7 +75,11 @@ body {
     *zoom: 1;
 }
 
-/* Form */
+/* General Styles */
+
+body {
+    font: 300 20px/30px "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
 
 form {
     position: absolute;
@@ -95,25 +93,74 @@ form {
     cursor: pointer;
 }
 
-.login form {
-    width: 350px;
-    height: 250px;
-    border: 1px solid;
-    padding-top: 40px;
-    padding-left: 100px;
-
-}
-
-/* Labels */
-
 label {
     display: block;
     margin-bottom: 0.25em;
     position:relative;
 }
 
+/* Buttons */
+
+.btn {
+    font: 300 20px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: white;
+    display: inline-block;
+    float: right;
+    border: 1px solid #000;
+    border-radius: 3px;
+    padding: 0 10px;
+    background: #2f6383
+;
+}
+
+.btn-alt {
+    margin-right: 5px;
+}
+
+.btn:hover, .btn-alt:hover {
+    background: #367196
+}
+
+/* Radio Circle */
+
+.radio-circle {
+    background: #e6e6e6;
+    position: absolute;
+    top: .25em;
+    left: -.75em;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+}
+
+/* Radio inner circle */
+.radio-circle:after {
+    position: absolute;
+    display: none;
+    content: "";
+    top: 7px;
+    left: 7px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+/* Login */
+
+.login form {
+    width: 350px;
+    height: 250px;
+    border: 1px solid;
+    padding-top: 40px;
+    padding-left: 100px;
+    border-radius: 25px;
+
+}
+
 .account-info label {
-    font-size: 18px;
+    font-size: 15px;
+    font-weight: bold;
     line-height: 21px;
     margin-bottom: 10px;
 }
@@ -122,7 +169,11 @@ label {
     font-size: 15px;
 }
 
+.actions .btn {
+    margin-right: 20px;
+}
 
+/* Quiz */
 
 .label-question {
     font-size: 28px;
@@ -137,18 +188,6 @@ label {
 .label-choices input {
     z-index: -1;
     opacity: 0;
-}
-
-/* Radio Circle */
-
-.radio-circle {
-    background: #e6e6e6;
-    position: absolute;
-    top: .25em;
-    left: -.75em;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
 }
 
 /* Hover and focus states */
@@ -168,44 +207,7 @@ label {
     background: #0e647d;
 }
 
-/* Radio inner circle */
-.radio-circle:after {
-    position: absolute;
-    display: none;
-    content: "";
-    top: 7px;
-    left: 7px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #fff;
-}
-
 /* Show check mark */
 .label-choices input:checked ~ .radio-circle:after {
     display:block;
-}
-
-/* Button */
-
-.btn {
-    font: 300 20px "Helvetica Neue", Helvetica, Arial, sans-serif;
-    display: inline-block;
-    float: right;
-    border: 1px solid #000;
-    border-radius: 3px;
-    padding: 0 10px;
-    background: #FCFFF5;
-}
-
-.btn-alt {
-    margin-right: 5px;
-}
-
-.btn:hover, .btn-alt:hover {
-    background: #91AA9D;
-}
-
-.actions .btn {
-    margin-right: 20px;
 }

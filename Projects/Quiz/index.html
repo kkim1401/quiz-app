@@ -5,8 +5,26 @@
     <link rel="stylesheet" href="assets/stylesheets/style.css">
     <script src="assets/javascript/script.js" defer></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="assets/javascript/handlebars-v4.0.5.js"></script>
 </head>
 <body>
+
+<!--Template-->
+<script id="template" type="text/x-handlebars-template">
+    {{#if question}}
+    <label class="label-question">{{question}}</label>
+    {{#each choices}}
+    <label class="label-choices">
+        <input type="radio" name="choices" value="{{choice}}" required {{checked}}>{{choice}}
+        <span class="radio-circle"></span>
+    </label>
+    {{/each}}
+    {{else}}
+        <h1>You got {{score}} out of {{total}}!</h1>
+    {{/if}}
+</script>
+
+<!--Login-->
 <section class="login">
     <form>
         <fieldset class="account-info">
@@ -27,12 +45,15 @@
         </fieldset>
     </form>
 </section>
+
+<!--Quiz-->
 <section class="quiz" style="visibility:hidden">
 <form class="group">
-    <fieldset></fieldset>
+    <fieldset><!--template inserted--></fieldset>
     <input type="button" name="next" id="next" value="Next" class="btn">
     <button type="button" class="btn btn-alt">Back</button>
 </form>
 </section>
+
 </body>
 </html>

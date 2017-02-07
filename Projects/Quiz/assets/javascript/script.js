@@ -74,7 +74,6 @@ function QuestionsModel() {
         },
         calcNumberCorrect: function () {
             for (var i = 0; i < questions.length; i++) {
-                console.log(questions[i].correct);
                 if (questions[i].correct) {
                     numberCorrect++;
                 }
@@ -133,7 +132,6 @@ function Handler(view, model) {
                                 }
                             });
                             model.back();
-                            console.log(model.getQuestionNumber());
                             DOM.quiz.removeEventListener("click", handler, false);
                         }
                         else {
@@ -153,69 +151,54 @@ function Handler(view, model) {
 function View(model) {
     var DOM = {
         $quiz: $(".quiz").find("form"),
-        login: document.forms[0],
         quiz: document.forms[1],
         fieldset: document.forms[1].getElementsByTagName("fieldset")[0],
         choices: document.getElementsByName("choices"),
         next: document.getElementsByName("next")[0],
         back: document.getElementsByTagName("button")[0]
-    };
-
-    function getData() {
-        //Using DocumentFragment to avoid continuously manipulating actual DOM.
-        var label,
-            docFrag = document.createDocumentFragment();
-        if (model.getQuestionNumber() < model.getQuestionsLength()) {
-            var input,
-                div,
-                labelForQuestion = document.createElement("label"),
-                labelQuestion = document.createTextNode(model.getQuestion().question);
-            labelForQuestion.className = "label-question";
-            labelForQuestion.appendChild(labelQuestion);
-            docFrag.appendChild(labelForQuestion);
-            for (var i = 0; i < model.getQuestion().answerChoices.length; i++) {
-                input = document.createElement("input");
-                label = document.createElement("label");
-                div = document.createElement("div");
-                input.type = "radio";
-                input.name = "choices";
-                input.required = "true";
-                label.className = "label-choices";
-                input.value = model.getQuestion().answerChoices[i];
-                div.className = "radio-circle";
-                input.checked = i === model.getQuestion().chosenIndex;
-                label.appendChild(input);
-                label.appendChild(div);
-                docFrag.appendChild(label);
-                input.insertAdjacentHTML("afterend", input.value);
-            }
+    },
+        template = Handlebars.compile(document.getElementById("template").innerHTML);
+    Handlebars.registerHelper("if", function(data, options){
+        if (data) {
+            return options.fn(this);
         }
-        //Display conclusions if finished
         else {
-            var h1 = document.createElement("h1");
-            label = document.createElement("label");
-            h1.appendChild(document.createTextNode("You got " + model.getNumberCorrect() +
-                " out of " + model.getTotalNumber() + "."));
-            label.appendChild(h1);
-            docFrag.appendChild(label);
             DOM.next.value = "Try again?";
             DOM.back.style.visibility = "hidden";
+            return options.inverse(this);
         }
-        return docFrag;
-    }
+    });
 
+    function getData() {
+        function checkTest(index) {
+            return index === model.getQuestion().chosenIndex ? "checked": "";
+        }
+        return model.getQuestionNumber() < model.getQuestionsLength() ?
+        {
+            question: model.getQuestion().question,
+            choices: model.getQuestion().answerChoices.map(function(item, index) {
+                return {
+                    choice: item,
+                    checked: checkTest(index)
+                }
+            })
+        }:
+        {
+            score: model.getNumberCorrect(),
+            total: model.getTotalNumber()
+        };
+    }
     return {
         getDOM: function () {
             return DOM;
         },
         notify: function () {
-            DOM.fieldset.innerHTML = "";
-            DOM.fieldset.appendChild(getData());
+            DOM.fieldset.innerHTML = template(getData());
         }
     };
 }
 
-function Initialize() {
+function initialize() {
     var form = document.forms[0],
         sections = document.getElementsByTagName("section"),
         username = form.elements["username"].value,
@@ -262,7 +245,7 @@ if (document.cookie) {
     document.forms[0].elements["password"].value = document.cookie.substring(document.cookie.lastIndexOf("=") + 1,
         document.cookie.length);
 }
-document.getElementsByClassName("btn")[0].addEventListener("click", Initialize, false);
+document.getElementsByClassName("btn")[0].addEventListener("click", initialize, false);
 
 
 
