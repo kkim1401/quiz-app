@@ -4,17 +4,42 @@
 
 function Question(question) {
     this.question = question.question;
-    this.answerChoices = question.choices;
-    this.correctIndex = question.correctIndex;
     this.correct = false;
 }
 
-Question.prototype = {
-    constructor: Question,
-    evaluate: function (index) {
-        this.chosenIndex = index;
-        this.correct = this.chosenIndex === this.correctIndex;
+function MultipleChoice(question) {
+    Question.call(this, question);
+    this.answerChoices = question.choices;
+    this.correctIndex = question.correctIndex;
+
+}
+
+function FillInTheBlank(question) {
+    Question.call(this, question);
+    this.correctAnswer = question.answer
+}
+
+function DragAndDrop(question) {
+    Question.call(this, question);
+}
+
+function inheritPrototype() {
+    for (var i = 0; i < arguments.length; i++) {
+        var prototype = Object.create(Question);
+        prototype.constructor = arguments[i];
+        arguments[i].prototype = prototype;
     }
+}
+
+inheritPrototype(MultipleChoice, FillInTheBlank, DragAndDrop);
+
+MultipleChoice.prototype.evaluate = function(index) {
+    this.chosenIndex = index;
+    this.correct = this.chosenIndex === this.correctIndex;
+};
+
+FillInTheBlank.prototype.evaluate = function(answer) {
+    this.correct = answer.toLowerCase() === this.correctAnswer.toLowerCase();
 };
 
 function Subject() {
@@ -53,7 +78,12 @@ function QuestionsModel() {
         },
         addQuestion: function (data) {
             for (var i = 0; i < data.length; i++) {
-                questions.push(new Question(data[i]));
+                if (data[i].choices) {
+                    questions.push(new MultipleChoice(data[i]));
+                }
+                else {
+                    questions.push(new FillInTheBlank(data[i]));
+                }
             }
             totalNumber = questions.length;
             subject.notifyObservers();
@@ -97,14 +127,19 @@ function Handler(view, model) {
                     case DOM.next:
                         if (model.getQuestionNumber() < model.getQuestionsLength()) {
                             var question = model.getQuestion();
-                            DOM.choices.forEach(function (choice, count) {
-                                if (choice.checked) {
-                                    question.evaluate(count);
-                                    if (model.getQuestionNumber() === model.getQuestionsLength() - 1) {
-                                        model.calcNumberCorrect();
+                            if (question instanceof MultipleChoice) {
+                                DOM.choices.forEach(function (choice, count) {
+                                    if (choice.checked) {
+                                        question.evaluate(count);
+                                        if (model.getQuestionNumber() === model.getQuestionsLength() - 1) {
+                                            model.calcNumberCorrect();
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
+                            else {
+                                question.evaluate(DOM.getBlank().value);
+                            }
                             //Have to check for validity since HTML5 validation API won't work for click events.
                             if (DOM.quiz.checkValidity()) {
                                 DOM.$quiz.fadeOut("fast", function () {
@@ -126,11 +161,16 @@ function Handler(view, model) {
                     case DOM.back:
                         if (model.getQuestionNumber() > 0) {
                             var question = model.getQuestion();
-                            DOM.choices.forEach(function (choice, count) {
-                                if (choice.checked) {
-                                    question.evaluate(count);
-                                }
-                            });
+                            if (question instanceof MultipleChoice) {
+                                DOM.choices.forEach(function (choice, count) {
+                                    if (choice.checked) {
+                                        question.evaluate(count);
+                                    }
+                                });
+                            }
+                            else {
+                                question.evaluate();
+                            }
                             model.back();
                             DOM.quiz.removeEventListener("click", handler, false);
                         }
@@ -150,43 +190,56 @@ function Handler(view, model) {
 
 function View(model) {
     var DOM = {
-        $quiz: $(".quiz").find("form"),
-        quiz: document.forms[1],
-        fieldset: document.forms[1].getElementsByTagName("fieldset")[0],
-        choices: document.getElementsByName("choices"),
-        next: document.getElementsByName("next")[0],
-        back: document.getElementsByTagName("button")[0]
-    },
+            $quiz: $(".quiz").find("form"),
+            quiz: document.forms[1],
+            fieldset: document.forms[1].getElementsByTagName("fieldset")[0],
+            choices: document.getElementsByName("choices"),
+            next: document.getElementsByName("next")[0],
+            back: document.getElementsByTagName("button")[0],
+            getBlank: function() {
+                return document.forms[1].elements["blank"];
+            }
+        },
         template = Handlebars.compile(document.getElementById("template").innerHTML);
-    Handlebars.registerHelper("if", function(data, options){
-        if (data) {
-            return options.fn(this);
-        }
-        else {
-            DOM.next.value = "Try again?";
-            DOM.back.style.visibility = "hidden";
-            return options.inverse(this);
-        }
+    Handlebars.registerHelper("changeButtons", function() {
+        DOM.next.value = "Try again?";
+        DOM.back.style.visibility = "hidden";
+        return "";
     });
-
     function getData() {
         function checkTest(index) {
             return index === model.getQuestion().chosenIndex ? "checked": "";
         }
-        return model.getQuestionNumber() < model.getQuestionsLength() ?
-        {
-            question: model.getQuestion().question,
-            choices: model.getQuestion().answerChoices.map(function(item, index) {
-                return {
-                    choice: item,
-                    checked: checkTest(index)
-                }
-            })
-        }:
-        {
-            score: model.getNumberCorrect(),
-            total: model.getTotalNumber()
-        };
+        if (model.getQuestionNumber() < model.getQuestionsLength()) {
+            switch (model.getQuestion().constructor){
+                case MultipleChoice:
+                    return {
+                        question: model.getQuestion().question,
+                        choices: model.getQuestion().answerChoices.map(function (item, index) {
+                            return {
+                                choice: item,
+                                checked: checkTest(index)
+                            };
+                        })
+                    };
+                    break;
+                case FillInTheBlank:
+                    console.log(model.getQuestion().correctAnswer);
+                    return {
+                        question: model.getQuestion().question,
+                        correctAnswer: model.getQuestion().correctAnswer
+                    };
+                    break;
+
+            }
+        }
+        else {
+            return {
+                score: model.getNumberCorrect(),
+                total: model.getTotalNumber()
+            }
+        }
+
     }
     return {
         getDOM: function () {

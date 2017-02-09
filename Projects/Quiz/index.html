@@ -11,7 +11,7 @@
 
 <!--Template-->
 <script id="template" type="text/x-handlebars-template">
-    {{#if question}}
+    {{#if choices}}
     <label class="label-question">{{question}}</label>
     {{#each choices}}
     <label class="label-choices">
@@ -19,8 +19,16 @@
         <span class="radio-circle"></span>
     </label>
     {{/each}}
-    {{else}}
-        <h1>You got {{score}} out of {{total}}!</h1>
+    {{/if}}
+    {{#if correctAnswer}}
+    <label class="label-question">{{question}}</label>
+    <label>
+        <input type="text" name="blank" id="blank" required>
+    </label>
+    {{/if}}
+    {{#if score}}
+    {{changeButtons}}
+    <h1>You got {{score}} out of {{total}}!</h1>
     {{/if}}
 </script>
 

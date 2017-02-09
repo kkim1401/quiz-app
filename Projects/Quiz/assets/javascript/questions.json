@@ -1,5 +1,9 @@
 [
   {
+    "question": "Do you use a lifting belt?",
+    "answer": "No"
+  },
+  {
     "question": "Which of the following do weightlifters specialize?",
     "choices": ["Back Squat", "Clean and Jerk", "Deadlift", "Curls"],
     "correctIndex": 1
