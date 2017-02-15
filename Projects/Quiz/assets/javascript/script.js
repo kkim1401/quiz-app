@@ -16,11 +16,12 @@ function MultipleChoice(question) {
 
 function FillInTheBlank(question) {
     Question.call(this, question);
-    this.correctAnswer = question.answer
+    this.correctAnswer = question.answer;
 }
 
 function DragAndDrop(question) {
     Question.call(this, question);
+    this.items = question.items;
 }
 
 function inheritPrototype() {
@@ -65,7 +66,6 @@ function QuestionsModel() {
         numberCorrect = 0,
         totalNumber = 0,
         questionNumber = 0;
-
     return {
         getQuestion: function () {
             return questions[questionNumber];
@@ -77,14 +77,15 @@ function QuestionsModel() {
             return questionNumber;
         },
         addQuestion: function (data) {
-            for (var i = 0; i < data.length; i++) {
-                if (data[i].choices) {
-                    questions.push(new MultipleChoice(data[i]));
+            data.forEach(function(item) {
+                switch (true) {
+                    case "choices" in item:
+                        questions.push(new MultipleChoice(item));
+                        break;
+                    case "answer" in item:
+                        questions.push(new FillInTheBlank(item));
                 }
-                else {
-                    questions.push(new FillInTheBlank(data[i]));
-                }
-            }
+            });
             totalNumber = questions.length;
             subject.notifyObservers();
         },
@@ -103,11 +104,11 @@ function QuestionsModel() {
             return numberCorrect;
         },
         calcNumberCorrect: function () {
-            for (var i = 0; i < questions.length; i++) {
-                if (questions[i].correct) {
+            questions.forEach(function(item) {
+                if (item.correct) {
                     numberCorrect++;
                 }
-            }
+            });
         },
         register: function (args) {
             subject.removeAll();
@@ -120,32 +121,34 @@ function QuestionsModel() {
 
 function Handler(view, model) {
     var DOM = view.getDOM();
+    //To stop the quiz from refreshing when pressing enter.
+    DOM.quiz.addEventListener("submit", function(){
+        event.preventDefault();
+    });
     return {
         notify: function () {
             var handler = function (event) {
                 switch (event.target) {
-                    case DOM.next:
+                    case DOM.next():
                         if (model.getQuestionNumber() < model.getQuestionsLength()) {
                             var question = model.getQuestion();
                             if (question instanceof MultipleChoice) {
                                 DOM.choices.forEach(function (choice, count) {
                                     if (choice.checked) {
                                         question.evaluate(count);
-                                        if (model.getQuestionNumber() === model.getQuestionsLength() - 1) {
-                                            model.calcNumberCorrect();
-                                        }
                                     }
                                 });
                             }
                             else {
                                 question.evaluate(DOM.getBlank().value);
                             }
+                            //If at last question, calculate number of questions answered correctly.
+                            if (model.getQuestionNumber() === model.getQuestionsLength() - 1) {
+                                model.calcNumberCorrect();
+                            }
                             //Have to check for validity since HTML5 validation API won't work for click events.
                             if (DOM.quiz.checkValidity()) {
-                                DOM.$quiz.fadeOut("fast", function () {
-                                    model.nextQuestion()
-                                });
-                                DOM.$quiz.fadeIn("fast");
+                                $fade(DOM.$quiz, "fast", model.nextQuestion);
                             }
                             else {
                                 alert("Please answer the question.");
@@ -158,8 +161,9 @@ function Handler(view, model) {
                         //Remove handler each time so that clicks aren't being registered multiple times.
                         DOM.quiz.removeEventListener("click", handler, false);
                         break;
-                    case DOM.back:
+                    case DOM.back():
                         if (model.getQuestionNumber() > 0) {
+                            //I want to somehow combine the two cases so that the question processing isn't repeated twice.
                             var question = model.getQuestion();
                             if (question instanceof MultipleChoice) {
                                 DOM.choices.forEach(function (choice, count) {
@@ -169,7 +173,7 @@ function Handler(view, model) {
                                 });
                             }
                             else {
-                                question.evaluate();
+                                question.evaluate(DOM.getBlank().value);
                             }
                             model.back();
                             DOM.quiz.removeEventListener("click", handler, false);
@@ -194,18 +198,20 @@ function View(model) {
             quiz: document.forms[1],
             fieldset: document.forms[1].getElementsByTagName("fieldset")[0],
             choices: document.getElementsByName("choices"),
-            next: document.getElementsByName("next")[0],
-            back: document.getElementsByTagName("button")[0],
+        /* The following properties are functions since their return values do not exist when this DOM object is initialized.
+        DOM.choices get a pass since it returns a NodeList.
+         */
+            next: function() {
+                return document.getElementsByName("next")[0];
+            },
+            back: function(){
+                return document.getElementsByTagName("button")[0];
+            },
             getBlank: function() {
                 return document.forms[1].elements["blank"];
             }
         },
         template = Handlebars.compile(document.getElementById("template").innerHTML);
-    Handlebars.registerHelper("changeButtons", function() {
-        DOM.next.value = "Try again?";
-        DOM.back.style.visibility = "hidden";
-        return "";
-    });
     function getData() {
         function checkTest(index) {
             return index === model.getQuestion().chosenIndex ? "checked": "";
@@ -215,6 +221,8 @@ function View(model) {
                 case MultipleChoice:
                     return {
                         question: model.getQuestion().question,
+                        number: model.getQuestionNumber() + 1,
+                        total: model.getTotalNumber(),
                         choices: model.getQuestion().answerChoices.map(function (item, index) {
                             return {
                                 choice: item,
@@ -224,9 +232,10 @@ function View(model) {
                     };
                     break;
                 case FillInTheBlank:
-                    console.log(model.getQuestion().correctAnswer);
                     return {
                         question: model.getQuestion().question,
+                        number: model.getQuestionNumber() + 1,
+                        total: model.getTotalNumber(),
                         correctAnswer: model.getQuestion().correctAnswer
                     };
                     break;
@@ -237,9 +246,8 @@ function View(model) {
             return {
                 score: model.getNumberCorrect(),
                 total: model.getTotalNumber()
-            }
+            };
         }
-
     }
     return {
         getDOM: function () {
@@ -251,25 +259,9 @@ function View(model) {
     };
 }
 
-function initialize() {
-    var form = document.forms[0],
-        sections = document.getElementsByTagName("section"),
-        username = form.elements["username"].value,
-        password = form.elements["password"].value,
-        date = new Date();
-    date.setDate(date.getDate()+1);
-    sections[0].style.visibility = "hidden";
-    sections[1].style.visibility = "visible";
-    if (form.elements["remember"].checked) {
-        //Made a subcookie so that it can be overwritten at every initialization.
-        document.cookie = encodeURIComponent("data") + "=" + encodeURIComponent(username) + "=" +
-            encodeURIComponent(password) + "; expires=" + date.toDateString();
-    }
-    if (localStorage.getItem(username) === password) {
-        alert("Welcome back " + username + "!");
-    }
-    localStorage.setItem(username, password);
-    event.target.removeEventListener("click", arguments.callee);
+function $fade($, speed, fn1, fn2) {
+    $.fadeOut(speed, fn1);
+    $.fadeIn(speed, fn2);
 }
 
 (function() {
@@ -282,8 +274,7 @@ function initialize() {
     request.setRequestHeader("Content-type", "application/json");
     request.onreadystatechange = function() {
         if (request.readyState == 4 && request.status == 200) {
-            var Response = JSON.parse(request.responseText);
-            model.addQuestion(Response);
+            model.addQuestion(JSON.parse(request.responseText));
         }
     };
     request.send();
@@ -298,7 +289,30 @@ if (document.cookie) {
     document.forms[0].elements["password"].value = document.cookie.substring(document.cookie.lastIndexOf("=") + 1,
         document.cookie.length);
 }
-document.getElementsByClassName("btn")[0].addEventListener("click", initialize, false);
+
+document.getElementsByClassName("btn")[0].addEventListener("click", function() {
+    var form = document.forms[0],
+        sections = document.getElementsByTagName("section"),
+        username = form.elements["username"].value,
+        password = form.elements["password"].value,
+        date = new Date();
+    date.setDate(date.getDate() + 1);
+    $fade($(".login"), "400", function() {
+        sections[0].style.visibility = "hidden";
+        sections[1].style.visibility = "visible";
+    });
+    if (form.elements["remember"].checked) {
+        //Made a subcookie so that it can be overwritten at every initialization.
+        document.cookie = encodeURIComponent("data") + "=" + encodeURIComponent(username) + "=" +
+            encodeURIComponent(password) + "; expires=" + date.toDateString();
+    }
+    if (localStorage.getItem(username) === password) {
+        alert("Welcome back " + username + "!");
+    }
+    localStorage.setItem(username, password);
+    event.target.removeEventListener("click", arguments.callee);
+}, false);
+
 
 
 

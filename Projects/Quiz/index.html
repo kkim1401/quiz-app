@@ -11,8 +11,9 @@
 
 <!--Template-->
 <script id="template" type="text/x-handlebars-template">
-    {{#if choices}}
+    {{#if question}}
     <label class="label-question">{{question}}</label>
+    {{#if choices}}
     {{#each choices}}
     <label class="label-choices">
         <input type="radio" name="choices" value="{{choice}}" required {{checked}}>{{choice}}
@@ -21,15 +22,18 @@
     {{/each}}
     {{/if}}
     {{#if correctAnswer}}
-    <label class="label-question">{{question}}</label>
-    <label>
+    <label class="blank">
         <input type="text" name="blank" id="blank" required>
     </label>
     {{/if}}
-    {{#if score}}
-    {{changeButtons}}
-    <h1>You got {{score}} out of {{total}}!</h1>
+    <input type="button" name="next" value="Next" class="btn">
+    <button type="button" class="btn btn-alt">Back</button>
+    <div>{{number}}/{{total}}</div>
     {{/if}}
+    {{#unless question}}
+    <h1>You got {{score}} out of {{total}}!</h1>
+    <input type="button" name="next" value="Try Again?" class="btn">
+    {{/unless}}
 </script>
 
 <!--Login-->
@@ -44,8 +48,6 @@
                 Password<br>
                 <input type="text" name="password" required>
             </label>
-        </fieldset>
-        <fieldset class="actions group">
             <label>
                 <input type="checkbox" name="remember"> Remember Me?
             </label>
@@ -56,12 +58,11 @@
 
 <!--Quiz-->
 <section class="quiz" style="visibility:hidden">
-<form class="group">
-    <fieldset><!--template inserted--></fieldset>
-    <input type="button" name="next" id="next" value="Next" class="btn">
-    <button type="button" class="btn btn-alt">Back</button>
+<form>
+    <fieldset class="group"><!--template inserted--></fieldset>
 </form>
 </section>
 
 </body>
 </html>
+

@@ -79,6 +79,7 @@ table {
 
 body {
     font: 300 20px/30px "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-color: #F5F4F1;
 }
 
 form {
@@ -88,8 +89,8 @@ form {
     right: 0;
     left: 0;
     bottom: 0;
-    width: 400px;
-    height: 300px;
+    width: 500px;
+    height: 500px;
     cursor: pointer;
 }
 
@@ -99,6 +100,14 @@ label {
     position:relative;
 }
 
+fieldset {
+    background-color: #fff;
+    padding: 60px 65px;
+    position: relative;
+    -webkit-box-shadow: 0 0 23px -2px rgba(0,0,0,0.13);
+       -moz-box-shadow: 0 0 23px -2px rgba(0,0,0,0.13);
+            box-shadow: 0 0 23px -2px rgba(0,0,0,0.13);
+}
 /* Buttons */
 
 .btn {
@@ -149,13 +158,11 @@ label {
 /* Login */
 
 .login form {
-    width: 350px;
-    height: 250px;
-    border: 1px solid;
-    padding-top: 40px;
-    padding-left: 100px;
-    border-radius: 25px;
+    padding: 100px;
+}
 
+.account-info {
+    padding: 30px;
 }
 
 .account-info label {
@@ -163,14 +170,12 @@ label {
     font-weight: bold;
     line-height: 21px;
     margin-bottom: 10px;
+    margin-left: 0
 }
 
-.actions label {
+.account-info label:last-of-type {
+    font-weight: normal;
     font-size: 15px;
-}
-
-.actions .btn {
-    margin-right: 20px;
 }
 
 /* Quiz */
@@ -179,6 +184,13 @@ label {
     font-size: 28px;
     line-height: 42px;
     letter-spacing: 1px;
+    margin-bottom: 15px;
+
+}
+
+.blank, .label-question {
+    position: relative;
+    right: .5em;
 }
 
 .label-choices:hover {
@@ -188,6 +200,13 @@ label {
 .label-choices input {
     z-index: -1;
     opacity: 0;
+}
+
+div {
+    font-size: 17px;
+    position: absolute;
+    right: 5px;
+    bottom: 0;
 }
 
 /* Hover and focus states */
