@@ -140,8 +140,9 @@ function Handler(view, model) {
     return {
         notify: function () {
             var handler = function (event) {
+                //I want to separate application logic and event-handling logic.
                 switch (event.target) {
-                    case DOM.next():
+                    case DOM.getNext():
                         if (model.getQuestionNumber() < model.getQuestionsLength()) {
                             var question = model.getQuestion();
                             if (question instanceof MultipleChoice) {
@@ -181,7 +182,7 @@ function Handler(view, model) {
                         //Remove handler each time so that clicks aren't being registered multiple times.
                         DOM.quiz.removeEventListener("click", handler, false);
                         break;
-                    case DOM.back():
+                    case DOM.getBack():
                         if (model.getQuestionNumber() > 0) {
                             //I want to somehow combine the two cases or generalize this so that the question processing isn't repeated twice.
                             var question = model.getQuestion();
@@ -221,10 +222,10 @@ function View(model) {
         /* The following properties are functions since their return values do not exist when this DOM object is initialized.
         DOM.choices get a pass since it returns a NodeList.
          */
-            next: function() {
+            getNext: function() {
                 return document.getElementsByName("next")[0];
             },
-            back: function(){
+            getBack: function(){
                 return document.getElementsByTagName("button")[0];
             },
             getBlank: function() {
@@ -236,10 +237,9 @@ function View(model) {
         },
         template = Handlebars.compile(document.getElementById("template").innerHTML);
     Handlebars.registerHelper("interpret", function(options) {
-        console.log(this);
         return options.fn(this).split(" ").reduce(function(acc, val) {
-            if (val === "___") {
-                val = "<input type='text' readOnly>"
+            if (val.includes("___")) {
+                val = "<input type='text' readOnly>" + val.substring(3) || "";
             }
             return acc += " " + val;
         },"");
