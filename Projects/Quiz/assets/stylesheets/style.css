@@ -202,11 +202,15 @@ fieldset {
     opacity: 0;
 }
 
-div {
+.counter {
     font-size: 17px;
     position: absolute;
     right: 5px;
     bottom: 0;
+}
+
+.item{
+    display: inline-block;
 }
 
 /* Hover and focus states */

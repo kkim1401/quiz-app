@@ -22,6 +22,7 @@ function FillInTheBlank(question) {
 function DragAndDrop(question) {
     Question.call(this, question);
     this.items = question.items;
+    this.correctAnswers = question.answers;
 }
 
 function inheritPrototype() {
@@ -41,6 +42,14 @@ MultipleChoice.prototype.evaluate = function(index) {
 
 FillInTheBlank.prototype.evaluate = function(answer) {
     this.correct = answer.toLowerCase() === this.correctAnswer.toLowerCase();
+};
+
+DragAndDrop.prototype.evaluate = function(items) {
+    this.correct = this.correctAnswers === items;
+};
+
+DragAndDrop.prototype.getQuestion = function() {
+
 };
 
 function Subject() {
@@ -84,6 +93,9 @@ function QuestionsModel() {
                         break;
                     case "answer" in item:
                         questions.push(new FillInTheBlank(item));
+                        break;
+                    case "items" in item:
+                        questions.push(new DragAndDrop((item)));
                 }
             });
             totalNumber = questions.length;
@@ -139,8 +151,16 @@ function Handler(view, model) {
                                     }
                                 });
                             }
-                            else {
+                            if (question instanceof FillInTheBlank) {
                                 question.evaluate(DOM.getBlank().value);
+                            }
+
+                            if (question instanceof DragAndDrop) {
+                                var items = Array.prototype.concat(DOM.getItemBlank());
+                                var values = items.map(function(item, index) {
+                                    return item.values;
+                                });
+                                question.evaluate(values);
                             }
                             //If at last question, calculate number of questions answered correctly.
                             if (model.getQuestionNumber() === model.getQuestionsLength() - 1) {
@@ -163,7 +183,7 @@ function Handler(view, model) {
                         break;
                     case DOM.back():
                         if (model.getQuestionNumber() > 0) {
-                            //I want to somehow combine the two cases so that the question processing isn't repeated twice.
+                            //I want to somehow combine the two cases or generalize this so that the question processing isn't repeated twice.
                             var question = model.getQuestion();
                             if (question instanceof MultipleChoice) {
                                 DOM.choices.forEach(function (choice, count) {
@@ -209,9 +229,21 @@ function View(model) {
             },
             getBlank: function() {
                 return document.forms[1].elements["blank"];
+            },
+            getItemBlank: function() {
+                return document.forms[1].elements["item-blank"];
             }
         },
         template = Handlebars.compile(document.getElementById("template").innerHTML);
+    Handlebars.registerHelper("interpret", function(options) {
+        console.log(this);
+        return options.fn(this).split(" ").reduce(function(acc, val) {
+            if (val === "___") {
+                val = "<input type='text' readOnly>"
+            }
+            return acc += " " + val;
+        },"");
+    });
     function getData() {
         function checkTest(index) {
             return index === model.getQuestion().chosenIndex ? "checked": "";
@@ -239,7 +271,14 @@ function View(model) {
                         correctAnswer: model.getQuestion().correctAnswer
                     };
                     break;
-
+                case DragAndDrop:
+                    return {
+                        ddQuestion: model.getQuestion().question,
+                        number: model.getQuestionNumber() + 1,
+                        items: model.getQuestion().items,
+                        total: model.getTotalNumber()
+                    };
+                    break;
             }
         }
         else {

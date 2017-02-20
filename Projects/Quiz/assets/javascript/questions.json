@@ -4,6 +4,11 @@
     "answer": "No"
   },
   {
+    "question": "Kevin ___ is a ___.",
+    "items": ["Lee", "Kim", "Chan", "weightlifter", "powerlifter"],
+    "answers": ["Kim", "powerlifter"]
+  },
+  {
     "question": "Which of the following do weightlifters specialize?",
     "choices": ["Back Squat", "Clean and Jerk", "Deadlift", "Curls"],
     "correctIndex": 1

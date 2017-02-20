@@ -23,17 +23,23 @@
     {{/if}}
     {{#if correctAnswer}}
     <label class="blank">
-        <input type="text" name="blank" id="blank" required>
+        <input type="text" name="blank" required>
     </label>
     {{/if}}
     <input type="button" name="next" value="Next" class="btn">
     <button type="button" class="btn btn-alt">Back</button>
-    <div>{{number}}/{{total}}</div>
+    <div class="counter">{{number}}/{{total}}</div>
     {{/if}}
-    {{#unless question}}
+    {{#if items}}
+    {{#interpret}}{{ddQuestion}}{{/interpret}}
+    {{#each items}}
+    <div class="item">{{this}}</div>
+    {{/each}}
+    {{/if}}
+    {{#if score}}
     <h1>You got {{score}} out of {{total}}!</h1>
     <input type="button" name="next" value="Try Again?" class="btn">
-    {{/unless}}
+    {{/if}}
 </script>
 
 <!--Login-->
