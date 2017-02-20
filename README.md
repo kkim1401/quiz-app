@@ -19,3 +19,5 @@ This application requires a web server for it to be functional.
 ![Login](assets/images/Login.png)
 
 ![MultipleChoice](assets/images/MultipleChoice.png)
+
+![Score](assets/images/Score.png)
