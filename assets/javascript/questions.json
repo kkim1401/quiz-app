@@ -1,17 +1,12 @@
 [
   {
-    "question": "Do you use a lifting belt?",
-    "answer": "No"
-  },
-  {
-    "question": "Kevin ___ is a ___.",
-    "items": ["Lee", "Kim", "Chan", "weightlifter", "powerlifter"],
-    "answers": ["Kim", "powerlifter"]
-  },
-  {
-    "question": "Which of the following do weightlifters specialize?",
-    "choices": ["Back Squat", "Clean and Jerk", "Deadlift", "Curls"],
+    "question": "What is the color of the sky?",
+    "choices": ["Red", "Blue", "Orange", "Purple"],
     "correctIndex": 1
+  },
+  {
+    "question": "Do spiders have six legs?",
+    "answer": "No"
   },
   {
     "question": "What do powerlifters specialize?",
