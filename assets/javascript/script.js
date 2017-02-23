@@ -131,86 +131,112 @@ function QuestionsModel() {
     }
 }
 
-function Handler(view, model) {
+function Controller(view, model) {
     var DOM = view.getDOM();
     //To stop the quiz from refreshing when pressing enter.
     DOM.quiz.addEventListener("submit", function(){
         event.preventDefault();
     });
-    return {
-        notify: function () {
-            var handler = function (event) {
-                //I want to separate application logic and event-handling logic.
-                switch (event.target) {
-                    case DOM.getNext():
-                        if (model.getQuestionNumber() < model.getQuestionsLength()) {
-                            var question = model.getQuestion();
-                            if (question instanceof MultipleChoice) {
-                                DOM.choices.forEach(function (choice, count) {
-                                    if (choice.checked) {
-                                        question.evaluate(count);
-                                    }
-                                });
-                            }
-                            if (question instanceof FillInTheBlank) {
-                                question.evaluate(DOM.getBlank().value);
-                            }
-
-                            if (question instanceof DragAndDrop) {
-                                var items = Array.prototype.concat(DOM.getItemBlank());
-                                var values = items.map(function(item, index) {
-                                    return item.values;
-                                });
-                                question.evaluate(values);
-                            }
-                            //If at last question, calculate number of questions answered correctly.
-                            if (model.getQuestionNumber() === model.getQuestionsLength() - 1) {
-                                model.calcNumberCorrect();
-                            }
-                            //Have to check for validity since HTML5 validation API won't work for click events.
-                            if (DOM.quiz.checkValidity()) {
-                                $fade(DOM.$quiz, "fast", model.nextQuestion);
-                            }
-                            else {
-                                alert("Please answer the question.");
-                                break;
-                            }
-                        }
-                        else {
-                            location.reload();
-                        }
-                        //Remove handler each time so that clicks aren't being registered multiple times.
-                        DOM.quiz.removeEventListener("click", handler, false);
-                        break;
-                    case DOM.getBack():
-                        if (model.getQuestionNumber() > 0) {
-                            //I want to somehow combine the two cases or generalize this so that the question processing isn't repeated twice.
-                            var question = model.getQuestion();
-                            if (question instanceof MultipleChoice) {
-                                DOM.choices.forEach(function (choice, count) {
-                                    if (choice.checked) {
-                                        question.evaluate(count);
-                                    }
-                                });
-                            }
-                            else {
-                                question.evaluate(DOM.getBlank().value);
-                            }
-                            model.back();
-                            DOM.quiz.removeEventListener("click", handler, false);
-                        }
-                        else {
-                            alert("This is the first question!");
-                        }
-                        break;
-                    default:
-                        //Need to break for any other event targets so that the form can keep listening for clicks.
-                        break;
-                }
-            };
-            DOM.quiz.addEventListener("click", handler, false);
+    function process()
+    {
+        var question = model.getQuestion();
+        switch(question.constructor)
+        {
+            case MultipleChoice:
+                DOM.choices.forEach(function (choice, count) {
+                    if (choice.checked) {
+                        question.evaluate(count);
+                    }
+                });
+                break;
+            case FillInTheBlank:
+                question.evaluate(DOM.getBlank().value);
+                break;
+            case DragAndDrop:
+                var items = Array.prototype.concat(DOM.getItemBlank());
+                var values = items.map(function(item, index) {
+                    return item.values;
+                });
+                question.evaluate(values);
+                break;
+            default:
+                break;
         }
-    };
+    }
+    function Handler (event) {
+        //I want to separate application logic and event-handling logic.
+        switch (event.target) {
+            case DOM.getNext():
+                if (model.getQuestionNumber() < model.getQuestionsLength()) {
+                    process();
+                    if (model.getQuestionNumber() === model.getQuestionsLength() - 1) {
+                        model.calcNumberCorrect();
+                    }
+                    //Have to check for validity since HTML5 validation API won't work for click events.
+                    if (DOM.quiz.checkValidity()) {
+                        $fade(DOM.$quiz, "fast", model.nextQuestion);
+                    }
+                    else {
+                        alert("Please answer the question.");
+                        break;
+                    }
+
+                }
+                break;
+            case DOM.getBack():
+                if (model.getQuestionNumber() > 0) {
+                    process();
+                    model.back();
+                }
+                else {
+                    alert("This is the first question!");
+                }
+                break;
+            case DOM.getTryAgain():
+                location.reload();
+                break;
+            default:
+                //Need to break for any other event targets so that the form can keep listening for clicks.
+                break;
+        }
+    }
+    DOM.quiz.addEventListener("click", Handler, false);
+    return {
+        /*notify: function () {
+            //For some reason, item or item-blank classes are added in drag/drop events.
+            DOM.quiz.addEventListener("dragstart", function (event) {
+                if (event.target.className = "item") {
+                    //console.log("drag start");
+                    //event.dataTransfer.setData("text", event.target.firstChild.data);
+                    //event.dataTransfer.effectAllowed = "copy";
+                    //console.log(event.dataTransfer.getData("text"));
+                }
+            });
+            DOM.getItemBlank().forEach(function (itemblank) {
+                itemblank.addEventListener("dragover", function (event) {
+                    if (event.target.className = "item") {
+                        //console.log("drag over");
+                        event.preventDefault();
+                        //event.dataTransfer.dropEffect = "copy";
+                    }
+                })
+            });
+            DOM.quiz.addEventListener("dragenter", function (event) {
+                if (event.target.className = "item-blank") {
+                    //console.log("drag enter");
+                    //event.preventDefault();
+                }
+            });
+            DOM.quiz.addEventListener("drop", function (event) {
+                //event.preventDefault();
+                if (event.target.className = "item-blank") {
+                    //console.log("drop");
+                    //var data = event.dataTransfer.getData("text");
+                    //event.target.value = data;
+                }
+            });
+        }*/
+    }
 }
 
 function View(model) {
@@ -219,6 +245,7 @@ function View(model) {
             quiz: document.forms[1],
             fieldset: document.forms[1].getElementsByTagName("fieldset")[0],
             choices: document.getElementsByName("choices"),
+            items: document.forms[1].elements["item"],
         /* The following properties are functions since their return values do not exist when this DOM object is initialized.
         DOM.choices get a pass since it returns a NodeList.
          */
@@ -226,23 +253,34 @@ function View(model) {
                 return document.getElementsByName("next")[0];
             },
             getBack: function(){
-                return document.getElementsByTagName("button")[0];
+                return document.getElementsByName("back")[0];
+            },
+            getTryAgain: function() {
+                return document.getElementsByName("try-again")[0];
             },
             getBlank: function() {
                 return document.forms[1].elements["blank"];
             },
             getItemBlank: function() {
                 return document.forms[1].elements["item-blank"];
+            },
+            getItemsList: function() {
+                return document.getElementsByClassName("items-list")[0];
             }
         },
         template = Handlebars.compile(document.getElementById("template").innerHTML);
-    Handlebars.registerHelper("interpret", function(options) {
-        return options.fn(this).split(" ").reduce(function(acc, val) {
-            if (val.includes("___")) {
-                val = "<input type='text' readOnly>" + val.substring(3) || "";
-            }
-            return acc += " " + val;
-        },"");
+    Handlebars.registerHelper("getQuestion", function(options) {
+        if (this.items) {
+            return this.question.split(" ").reduce(function(acc, val) {
+                if (val.includes("___")) {
+                    val = "<input type='text' name='item-blank' readonly>" + val.substring(3) || "";
+                }
+                return acc += " " + val;
+            },"");
+        }
+        else {
+            return this.question;
+        }
     });
     function getData() {
         function checkTest(index) {
@@ -273,7 +311,7 @@ function View(model) {
                     break;
                 case DragAndDrop:
                     return {
-                        ddQuestion: model.getQuestion().question,
+                        question: model.getQuestion().question,
                         number: model.getQuestionNumber() + 1,
                         items: model.getQuestion().items,
                         total: model.getTotalNumber()
@@ -306,9 +344,9 @@ function $fade($, speed, fn1, fn2) {
 (function() {
     var model = QuestionsModel(),
         view = View(model),
-        handler = Handler(view, model),
+        controller = Controller(view, model),
         request = new XMLHttpRequest();
-    model.register(handler, view);
+    model.register(view);
     request.open("GET", "assets/javascript/questions.json", true);
     request.setRequestHeader("Content-type", "application/json");
     request.onreadystatechange = function() {

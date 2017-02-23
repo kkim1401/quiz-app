@@ -12,34 +12,31 @@
 <!--Template-->
 <script id="template" type="text/x-handlebars-template">
     {{#if question}}
-    <label class="label-question">{{question}}</label>
-    {{#if choices}}
-    {{#each choices}}
-    <label class="label-choices">
-        <input type="radio" name="choices" value="{{choice}}" required {{checked}}>{{choice}}
-        <span class="radio-circle"></span>
-    </label>
-    {{/each}}
+        <label class="label-question">{{{getQuestion}}}</label>
+        {{#if choices}}
+            {{#each choices}}
+                <label class="label-choices">
+                    <input type="radio" name="choices" value="{{choice}}" required {{checked}}>{{choice}}
+                    <span class="radio-circle"></span>
+                </label>
+            {{/each}}
+        {{/if}}
+        {{#if correctAnswer}}
+            <label class="blank"><input type="text" name="blank" required></label>
+        {{/if}}
+        {{#if items}}
+            {{#each items}}
+                <span class="item" draggable="true">{{this}}</span>
+            {{/each}}
+        {{/if}}
+        <button name="next" class="btn">Next</button>
+        <button name="back" class="btn btn-alt">Back</button>
+        <div class="counter">{{number}}/{{total}}</div>
     {{/if}}
-    {{#if correctAnswer}}
-    <label class="blank">
-        <input type="text" name="blank" required>
-    </label>
-    {{/if}}
-    <input type="button" name="next" value="Next" class="btn">
-    <button type="button" class="btn btn-alt">Back</button>
-    <div class="counter">{{number}}/{{total}}</div>
-    {{/if}}
-    {{#if items}}
-    {{#interpret}}{{ddQuestion}}{{/interpret}}
-    {{#each items}}
-    <div class="item">{{this}}</div>
-    {{/each}}
-    {{/if}}
-    {{#if score}}
-    <h1>You got {{score}} out of {{total}}!</h1>
-    <input type="button" name="next" value="Try Again?" class="btn">
-    {{/if}}
+    {{#unless question}}
+        <h1>You got {{score}} out of {{total}}!</h1>
+        <button name="try-again" class="btn">Try Again?</button>
+    {{/unless}}
 </script>
 
 <!--Login-->
@@ -64,9 +61,9 @@
 
 <!--Quiz-->
 <section class="quiz" style="visibility:hidden">
-<form>
-    <fieldset class="group"><!--template inserted--></fieldset>
-</form>
+    <form>
+        <fieldset class="group"><!--template inserted--></fieldset>
+    </form>
 </section>
 
 </body>

@@ -102,7 +102,7 @@ label {
 
 fieldset {
     background-color: #fff;
-    padding: 60px 65px;
+    padding: 40px 65px;
     position: relative;
     -webkit-box-shadow: 0 0 23px -2px rgba(0,0,0,0.13);
        -moz-box-shadow: 0 0 23px -2px rgba(0,0,0,0.13);
@@ -113,8 +113,9 @@ fieldset {
 .btn {
     font: 300 20px "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: white;
-    display: inline-block;
-    float: right;
+    position: absolute;
+    right: 15px;
+    bottom: 35px;
     border: 1px solid #000;
     border-radius: 3px;
     padding: 0 10px;
@@ -123,7 +124,7 @@ fieldset {
 }
 
 .btn-alt {
-    margin-right: 5px;
+    margin-right: 67px;
 }
 
 .btn:hover, .btn-alt:hover {
@@ -188,7 +189,7 @@ fieldset {
 
 }
 
-.blank, .label-question {
+.blank, .label-question, .item {
     position: relative;
     right: .5em;
 }
@@ -202,6 +203,11 @@ fieldset {
     opacity: 0;
 }
 
+.item {
+    display: inline-block;
+    margin: 0 15px 15px 0;
+}
+
 .counter {
     font-size: 17px;
     position: absolute;
@@ -209,9 +215,6 @@ fieldset {
     bottom: 0;
 }
 
-.item{
-    display: inline-block;
-}
 
 /* Hover and focus states */
 .label-choices:hover input ~ .radio-circle,
@@ -233,4 +236,16 @@ fieldset {
 /* Show check mark */
 .label-choices input:checked ~ .radio-circle:after {
     display:block;
+}
+
+input[type="text"] {
+    padding: 5px;
+    width: 11em;
+    border: solid 1px #dcdcdc;
+    transition: box-shadow 0.3s, border 0.3s;
+}
+
+input[type="text"]:focus {
+    border: solid 1px #707070;
+    box-shadow: 0 0 5px 1px #969696;
 }

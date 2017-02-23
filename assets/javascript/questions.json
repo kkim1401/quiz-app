@@ -1,5 +1,10 @@
 [
   {
+    "question": "Kevin ___ is a ___.",
+    "items": ["Lee", "Kim", "Chan", "weightlifter", "powerlifter"],
+    "answers": ["Kim", "powerlifter"]
+  },
+  {
     "question": "What is the color of the sky?",
     "choices": ["Red", "Blue", "Orange", "Purple"],
     "correctIndex": 1
