@@ -163,7 +163,7 @@ function Controller(view, model) {
                 break;
         }
     }
-    function Handler (event) {
+    function ClickHandler (event) {
         //I want to separate application logic and event-handling logic.
         switch (event.target) {
             case DOM.getNext():
@@ -200,7 +200,7 @@ function Controller(view, model) {
                 break;
         }
     }
-    DOM.quiz.addEventListener("click", Handler, false);
+    DOM.quiz.addEventListener("click", ClickHandler, false);
     return {
         /*notify: function () {
             //For some reason, item or item-blank classes are added in drag/drop events.
