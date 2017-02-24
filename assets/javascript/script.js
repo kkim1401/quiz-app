@@ -113,14 +113,12 @@ function QuestionsModel() {
             return totalNumber;
         },
         getNumberCorrect: function () {
-            return numberCorrect;
-        },
-        calcNumberCorrect: function () {
             questions.forEach(function(item) {
                 if (item.correct) {
                     numberCorrect++;
                 }
             });
+            return numberCorrect;
         },
         register: function (args) {
             subject.removeAll();
@@ -132,14 +130,14 @@ function QuestionsModel() {
 }
 
 function Controller(view, model) {
-    var DOM = view.getDOM();
+    var DOM = view.getDOM(),
+        handler = null;
     //To stop the quiz from refreshing when pressing enter.
     DOM.quiz.addEventListener("submit", function(){
         event.preventDefault();
     });
-    function process()
+    function process(question)
     {
-        var question = model.getQuestion();
         switch(question.constructor)
         {
             case MultipleChoice:
@@ -152,59 +150,59 @@ function Controller(view, model) {
             case FillInTheBlank:
                 question.evaluate(DOM.getBlank().value);
                 break;
-            case DragAndDrop:
+            /*case DragAndDrop:
                 var items = Array.prototype.concat(DOM.getItemBlank());
                 var values = items.map(function(item, index) {
                     return item.values;
                 });
                 question.evaluate(values);
                 break;
+                */
             default:
                 break;
         }
     }
-    function ClickHandler (event) {
-        //I want to separate application logic and event-handling logic.
+    function ClickHandler (data, event) {
         switch (event.target) {
             case DOM.getNext():
-                if (model.getQuestionNumber() < model.getQuestionsLength()) {
-                    process();
-                    if (model.getQuestionNumber() === model.getQuestionsLength() - 1) {
-                        model.calcNumberCorrect();
-                    }
                     //Have to check for validity since HTML5 validation API won't work for click events.
                     if (DOM.quiz.checkValidity()) {
+                        process(data);
                         $fade(DOM.$quiz, "fast", model.nextQuestion);
                     }
                     else {
                         alert("Please answer the question.");
-                        break;
+                        //Need to return so that removeEventListener after switch will not be reached.
+                        return;
                     }
-
-                }
                 break;
             case DOM.getBack():
                 if (model.getQuestionNumber() > 0) {
-                    process();
+                    process(data);
                     model.back();
                 }
                 else {
                     alert("This is the first question!");
+                    return;
                 }
                 break;
             case DOM.getTryAgain():
                 location.reload();
                 break;
             default:
-                //Need to break for any other event targets so that the form can keep listening for clicks.
-                break;
+                //Ignore unimportant clicks.
+                return;
         }
+        DOM.quiz.removeEventListener("click", handler, false);
     }
-    DOM.quiz.addEventListener("click", ClickHandler, false);
     return {
-        /*notify: function () {
+        notify: function () {
+            var question = model.getQuestion() || null;
+            handler = ClickHandler.bind(null, question);
+            DOM.quiz.addEventListener("click", handler, false);
+
             //For some reason, item or item-blank classes are added in drag/drop events.
-            DOM.quiz.addEventListener("dragstart", function (event) {
+            /*DOM.quiz.addEventListener("dragstart", function (event) {
                 if (event.target.className = "item") {
                     //console.log("drag start");
                     //event.dataTransfer.setData("text", event.target.firstChild.data);
@@ -234,8 +232,8 @@ function Controller(view, model) {
                     //var data = event.dataTransfer.getData("text");
                     //event.target.value = data;
                 }
-            });
-        }*/
+            });*/
+        }
     }
 }
 
@@ -346,7 +344,7 @@ function $fade($, speed, fn1, fn2) {
         view = View(model),
         controller = Controller(view, model),
         request = new XMLHttpRequest();
-    model.register(view);
+    model.register(view, controller);
     request.open("GET", "assets/javascript/questions.json", true);
     request.setRequestHeader("Content-type", "application/json");
     request.onreadystatechange = function() {
