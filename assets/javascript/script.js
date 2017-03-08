@@ -48,10 +48,6 @@ DragAndDrop.prototype.evaluate = function(items) {
     this.correct = this.correctAnswers === items;
 };
 
-DragAndDrop.prototype.getQuestion = function() {
-
-};
-
 function Subject() {
     var observers = [];
     return {
@@ -69,7 +65,7 @@ function Subject() {
     }
 }
 
-function QuestionsModel() {
+function QuizModel() {
     var subject = Subject(),
         questions = [],
         numberCorrect = 0,
@@ -129,9 +125,9 @@ function QuestionsModel() {
     }
 }
 
-function Controller(view, model) {
+function QuizController(view, model) {
     var DOM = view.getDOM(),
-        handler = null;
+        clickHandler = null;
     //To stop the quiz from refreshing when pressing enter.
     DOM.quiz.addEventListener("submit", function(){
         event.preventDefault();
@@ -148,6 +144,7 @@ function Controller(view, model) {
                 });
                 break;
             case FillInTheBlank:
+                //Results in error if going back while leaving answer blank, since value is undefined.
                 question.evaluate(DOM.getBlank().value);
                 break;
             /*case DragAndDrop:
@@ -162,7 +159,7 @@ function Controller(view, model) {
                 break;
         }
     }
-    function ClickHandler (data, event) {
+    function handleClick (data, event) {
         switch (event.target) {
             case DOM.getNext():
                     //Have to check for validity since HTML5 validation API won't work for click events.
@@ -193,51 +190,51 @@ function Controller(view, model) {
                 //Ignore unimportant clicks.
                 return;
         }
-        DOM.quiz.removeEventListener("click", handler, false);
+        DOM.quiz.removeEventListener("click", clickHandler, false);
+    }
+    function handleDragStart(event) {
+        if (event.target.className = "item") {
+            console.log("drag start");
+            event.dataTransfer.setData("text", event.target.firstChild.data);
+            event.dataTransfer.effectAllowed = "copy";
+            console.log(event.dataTransfer.getData("text"));
+        }
+    }
+    function handleDragOver(event) {
+            console.log("drag over");
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+    }
+    function handleDragEnter(event) {
+            console.log("drag enter");
+            event.preventDefault();
+    }
+    function handleDrop(event) {
+            console.log("drop");
+            var data = event.dataTransfer.getData("text");
+            event.target.value = data;
     }
     return {
         notify: function () {
             var question = model.getQuestion() || null;
-            handler = ClickHandler.bind(null, question);
-            DOM.quiz.addEventListener("click", handler, false);
+            clickHandler = handleClick.bind(null, question);
+            //I might see if I can just add the click handler in the controller's initialization and somehow pass a new question to it so that I won't have to keep adding/removing an event listener every time.
+            DOM.quiz.addEventListener("click", clickHandler, false);
 
-            //For some reason, item or item-blank classes are added in drag/drop events.
-            /*DOM.quiz.addEventListener("dragstart", function (event) {
-                if (event.target.className = "item") {
-                    //console.log("drag start");
-                    //event.dataTransfer.setData("text", event.target.firstChild.data);
-                    //event.dataTransfer.effectAllowed = "copy";
-                    //console.log(event.dataTransfer.getData("text"));
-                }
-            });
-            DOM.getItemBlank().forEach(function (itemblank) {
-                itemblank.addEventListener("dragover", function (event) {
-                    if (event.target.className = "item") {
-                        //console.log("drag over");
-                        event.preventDefault();
-                        //event.dataTransfer.dropEffect = "copy";
-                    }
-                })
-            });
-            DOM.quiz.addEventListener("dragenter", function (event) {
-                if (event.target.className = "item-blank") {
-                    //console.log("drag enter");
-                    //event.preventDefault();
-                }
-            });
-            DOM.quiz.addEventListener("drop", function (event) {
-                //event.preventDefault();
-                if (event.target.className = "item-blank") {
-                    //console.log("drop");
-                    //var data = event.dataTransfer.getData("text");
-                    //event.target.value = data;
-                }
-            });*/
+            //I want to find another way of adding event listeners for drag events. Delegating the events to the parent node results in some weird errors, but I also don't like attaching them individually. Where should I remove these?
+            /*if (question.constructor = DragAndDrop) {
+                DOM.quiz.addEventListener("dragstart", handleDragStart, false);
+                DOM.getItemBlank().forEach(function (itemblank) {
+                    itemblank.addEventListener("dragover", handleDragOver, false);
+                    itemblank.addEventListener("dragenter", handleDragEnter, false);
+                    itemblank.addEventListener("drop", handleDrop, false);
+                });
+            }*/
         }
     }
 }
 
-function View(model) {
+function QuizView(model) {
     var DOM = {
             $quiz: $(".quiz").find("form"),
             quiz: document.forms[1],
@@ -266,14 +263,14 @@ function View(model) {
                 return document.getElementsByClassName("items-list")[0];
             }
         },
-        template = Handlebars.compile(document.getElementById("template").innerHTML);
+        template = Handlebars.compile(document.getElementById("quiz-template").innerHTML);
     Handlebars.registerHelper("getQuestion", function(options) {
         if (this.items) {
             return this.question.split(" ").reduce(function(acc, val) {
                 if (val.includes("___")) {
                     val = "<input type='text' name='item-blank' readonly>" + val.substring(3) || "";
                 }
-                return acc += " " + val;
+                return acc + " " + val;
             },"");
         }
         else {
@@ -339,55 +336,186 @@ function $fade($, speed, fn1, fn2) {
     $.fadeIn(speed, fn2);
 }
 
+function LoginModel() {
+    var subject = new Subject(),
+        date;
+    return {
+        storeCredentials: function(user, pass) {
+            localStorage.setItem(user, pass);
+        },
+        setDate: function() {
+            date = new Date();
+            date.setDate(date.getDate() + 1);
+        },
+        isUser: function(user, pass) {
+          return localStorage.getItem(user) === pass;
+        },
+        setCookie: function(user, pass) {
+            document.cookie = encodeURIComponent("data") + "=" + encodeURIComponent(user) + "=" +
+                encodeURIComponent(pass) + "; expires=" + date.toDateString();
+        },
+        getCookie: {
+                user: document.cookie ? document.cookie.substring(5, document.cookie.indexOf("=", 5)) : "",
+                pass: document.cookie ? document.cookie.substring(document.cookie.lastIndexOf("=") + 1, document.cookie.length) : ""
+        },
+        register: function (args) {
+            subject.removeAll();
+            for (var i = 0; i < arguments.length; i++) {
+                subject.add(arguments[i]);
+            }
+        }
+    }
+}
+
+function LoginPresenter(view, model) {
+    var DOM = view.getDOM(),
+        subject = new Subject();
+    DOM.loginForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+    }, false);
+    function handleClickInTitle(event) {
+        switch(event.target) {
+            case DOM.loginButton:
+                DOM.setUsername(model.getCookie["user"]);
+                DOM.setPassword(model.getCookie["pass"]);
+                Handlebars.registerHelper("login", function(options) {
+                    return options.fn(this);
+                });
+                break;
+            case DOM.registerButton:
+                Handlebars.registerHelper("register", function(options) {
+                    return options.fn(this);
+                });
+                break;
+            case DOM.adminButton:
+                break;
+            default:
+                return;
+        }
+        subject.notifyObservers();
+        $fade(DOM.$login, "400", function() {
+            DOM.titleSection.style.visibility = "hidden";
+            DOM.loginSection.style.visibility = "visible";
+        });
+    }
+    function handleClickInLogin(event) {
+        switch(event.target) {
+            case DOM.getStartButton():
+                if (DOM.loginForm.checkValidity()) {
+                    if (model.isUser(DOM.getUsername(), DOM.getPassword())) {
+                        model.setDate();
+                        if (DOM.isChecked()) {
+                            model.setCookie(DOM.getUsername(), DOM.getPassword());
+                        }
+                        $fade(DOM.$login, "400", function () {
+                            DOM.loginSection.style.visibility = "hidden";
+                            DOM.quizSection.style.visibility = "visible";
+                        });
+                    }
+                    else {
+                        alert("Can't recognize username or password.");
+                    }
+                }
+                else {
+                    alert("Please complete the form");
+                }
+                break;
+            case DOM.getJoinButton():
+                if (DOM.loginForm.checkValidity()) {
+                    if (DOM.getPassword() === DOM.getConfirmPassword()) {
+                        model.storeCredentials(DOM.getUsername(), DOM.getPassword());
+                    }
+                    else {
+                        alert("Passwords do not match.");
+                    }
+                } else {
+                    alert("Please fill out the form.");
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    DOM.titleSection.addEventListener("click", handleClickInTitle, false);
+    DOM.loginSection.addEventListener("click", handleClickInLogin, false);
+    return {
+        register: function (args) {
+            subject.removeAll();
+            for (var i = 0; i < arguments.length; i++) {
+                subject.add(arguments[i]);
+            }
+        }
+    }
+}
+
+function LoginView() {
+    var DOM = {
+        $login: $(".login"),
+        loginForm: document.forms[0],
+        loginSection: document.getElementsByClassName("login")[0],
+        quizSection: document.getElementsByClassName("quiz")[0],
+        titleSection: document.getElementsByClassName("title")[0],
+        fieldset: document.forms[0].getElementsByTagName("fieldset")[0],
+        loginButton: document.getElementsByName("login")[0],
+        registerButton: document.getElementsByName("register")[0],
+        adminButton: document.getElementsByName("admin")[0],
+        getStartButton: function() {
+            return document.getElementsByName("start")[0];
+        },
+        getJoinButton: function() {
+            return document.getElementsByName("join")[0];
+        },
+        getUsername: function() {
+            return this.loginForm.elements["username"].value;
+        },
+        getPassword: function() {
+            return this.loginForm.elements["password"].value;
+        },
+        getConfirmPassword: function() {
+            return this.loginForm.elements["confirm-password"].value;
+        },
+        setUsername: function(user) {
+            this.loginForm.elements["username"].value = user;
+        },
+        setPassword: function(pass) {
+            this.loginForm.elements["password"].value = pass;
+        },
+        isChecked: function() {
+            return this.loginForm.elements["remember"].value;
+        }
+    },
+        template = Handlebars.compile(document.getElementById("login-template").innerHTML);
+    DOM.fieldset.innerHTML = template({});
+    return {
+        getDOM: function() {
+            return DOM;
+        },
+        notify: function() {
+            DOM.fieldset.innerHTML = template({});
+        }
+
+    }
+}
+
 (function() {
-    var model = QuestionsModel(),
-        view = View(model),
-        controller = Controller(view, model),
+    var loginModel = LoginModel(),
+        loginView = LoginView(),
+        loginPresenter = LoginPresenter(loginView, loginModel),
+        quizModel = QuizModel(),
+        quizView = QuizView(quizModel),
+        quizController = QuizController(quizView, quizModel),
         request = new XMLHttpRequest();
-    model.register(view, controller);
+    quizModel.register(quizView, quizController);
+    loginPresenter.register(loginView);
     request.open("GET", "assets/javascript/questions.json", true);
     request.setRequestHeader("Content-type", "application/json");
     request.onreadystatechange = function() {
         if (request.readyState == 4 && request.status == 200) {
-            model.addQuestion(JSON.parse(request.responseText));
+            quizModel.addQuestion(JSON.parse(request.responseText));
         }
     };
     request.send();
 })();
-
-/*
- I get a "Uncaught (in promise) error" when trying to access document.cookie after quitting the browser,
- so document.cookie only lasts for one session. Not sure why this happens.
- */
-if (document.cookie) {
-    document.forms[0].elements["username"].value = document.cookie.substring(5, document.cookie.indexOf("=", 5));
-    document.forms[0].elements["password"].value = document.cookie.substring(document.cookie.lastIndexOf("=") + 1,
-        document.cookie.length);
-}
-
-document.getElementsByClassName("btn")[0].addEventListener("click", function() {
-    var form = document.forms[0],
-        sections = document.getElementsByTagName("section"),
-        username = form.elements["username"].value,
-        password = form.elements["password"].value,
-        date = new Date();
-    date.setDate(date.getDate() + 1);
-    $fade($(".login"), "400", function() {
-        sections[0].style.visibility = "hidden";
-        sections[1].style.visibility = "visible";
-    });
-    if (form.elements["remember"].checked) {
-        //Made a subcookie so that it can be overwritten at every initialization.
-        document.cookie = encodeURIComponent("data") + "=" + encodeURIComponent(username) + "=" +
-            encodeURIComponent(password) + "; expires=" + date.toDateString();
-    }
-    if (localStorage.getItem(username) === password) {
-        alert("Welcome back " + username + "!");
-    }
-    localStorage.setItem(username, password);
-    event.target.removeEventListener("click", arguments.callee);
-}, false);
-
 
 
 
