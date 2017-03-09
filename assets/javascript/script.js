@@ -350,6 +350,9 @@ function LoginModel() {
         isUser: function(user, pass) {
           return localStorage.getItem(user) === pass;
         },
+        userExists: function(user) {
+          return localStorage.getItem(user);
+        },
         setCookie: function(user, pass) {
             document.cookie = encodeURIComponent("data") + "=" + encodeURIComponent(user) + "=" +
                 encodeURIComponent(pass) + "; expires=" + date.toDateString();
@@ -379,15 +382,25 @@ function LoginPresenter(view, model) {
                 DOM.setUsername(model.getCookie["user"]);
                 DOM.setPassword(model.getCookie["pass"]);
                 Handlebars.registerHelper("login", function(options) {
+                    //Helper need to last only for this screen.
+                    Handlebars.unregisterHelper("login");
                     return options.fn(this);
                 });
                 break;
             case DOM.registerButton:
                 Handlebars.registerHelper("register", function(options) {
+                    Handlebars.unregisterHelper("register");
                     return options.fn(this);
                 });
                 break;
             case DOM.adminButton:
+                /*
+                Handlebars.registerHelper("admin", function(options) {
+                    //Helper need to last only for this screen.
+                    Handlebars.unregisterHelper("login");
+                    return options.fn(this);
+                });
+                */
                 break;
             default:
                 return;
@@ -398,14 +411,17 @@ function LoginPresenter(view, model) {
             DOM.loginSection.style.visibility = "visible";
         });
     }
+    //Works but there's a lot of logic here that looks like it can be broken up.
     function handleClickInLogin(event) {
         switch(event.target) {
             case DOM.getStartButton():
+                //Need to dynamically set required boolean to avoid focus errors when toggling visibility.
+                DOM.setRequired(DOM.getUsernameElement(), DOM.getPasswordElement());
                 if (DOM.loginForm.checkValidity()) {
-                    if (model.isUser(DOM.getUsername(), DOM.getPassword())) {
+                    if (model.isUser(DOM.getUsernameElement().value, DOM.getPasswordElement().value)) {
                         model.setDate();
                         if (DOM.isChecked()) {
-                            model.setCookie(DOM.getUsername(), DOM.getPassword());
+                            model.setCookie(DOM.getUsernameElement().value, DOM.getPasswordElement().value);
                         }
                         $fade(DOM.$login, "400", function () {
                             DOM.loginSection.style.visibility = "hidden";
@@ -419,18 +435,32 @@ function LoginPresenter(view, model) {
                 else {
                     alert("Please complete the form");
                 }
+                DOM.setUnrequired(DOM.getUsernameElement(), DOM.getPasswordElement());
                 break;
             case DOM.getJoinButton():
+                DOM.setRequired(DOM.getUsernameElement(), DOM.getPasswordElement(), DOM.getConfirmPasswordElement());
                 if (DOM.loginForm.checkValidity()) {
-                    if (DOM.getPassword() === DOM.getConfirmPassword()) {
-                        model.storeCredentials(DOM.getUsername(), DOM.getPassword());
+                    if (DOM.getPasswordElement().value === DOM.getConfirmPasswordElement().value) {
+                        if (!model.userExists(DOM.getUsernameElement().value)) {
+                            model.storeCredentials(DOM.getUsernameElement().value, DOM.getPasswordElement().value);
+                            alert("User successfully registered!");
+                        }
+                        else {
+                            alert("User already exists!");
+                        }
                     }
                     else {
                         alert("Passwords do not match.");
                     }
-                } else {
+                }
+                else {
                     alert("Please fill out the form.");
                 }
+                DOM.setUnrequired(DOM.getUsernameElement(), DOM.getPasswordElement(), DOM.getConfirmPasswordElement());
+                break;
+            case DOM.getBackButton():
+                DOM.loginSection.style.visibility = "hidden";
+                DOM.titleSection.style.visibility = "visible";
                 break;
             default:
                 break;
@@ -456,29 +486,42 @@ function LoginView() {
         quizSection: document.getElementsByClassName("quiz")[0],
         titleSection: document.getElementsByClassName("title")[0],
         fieldset: document.forms[0].getElementsByTagName("fieldset")[0],
-        loginButton: document.getElementsByName("login")[0],
-        registerButton: document.getElementsByName("register")[0],
-        adminButton: document.getElementsByName("admin")[0],
+        loginButton: document.getElementsByClassName("title")[0].querySelector("button[name='login']"),
+        registerButton: document.getElementsByClassName("title")[0].querySelector("button[name='register]"),
+        adminButton: document.getElementsByClassName("title")[0].querySelector("button[name='admin']"),
         getStartButton: function() {
             return document.getElementsByName("start")[0];
         },
         getJoinButton: function() {
             return document.getElementsByName("join")[0];
         },
-        getUsername: function() {
-            return this.loginForm.elements["username"].value;
+        getBackButton: function() {
+            return document.getElementsByName("back")[0];
         },
-        getPassword: function() {
-            return this.loginForm.elements["password"].value;
+        getUsernameElement: function() {
+            return this.loginForm.elements["username"];
         },
-        getConfirmPassword: function() {
-            return this.loginForm.elements["confirm-password"].value;
+        getPasswordElement: function() {
+            return this.loginForm.elements["password"];
+        },
+        getConfirmPasswordElement: function() {
+            return this.loginForm.elements["confirm-password"];
         },
         setUsername: function(user) {
             this.loginForm.elements["username"].value = user;
         },
         setPassword: function(pass) {
             this.loginForm.elements["password"].value = pass;
+        },
+        setRequired: function(args) {
+            for (var i = 0; i < arguments.length; i++) {
+                arguments[i].required = true;
+            }
+        },
+        setUnrequired: function(args) {
+            for (var i = 0; i < arguments.length; i++) {
+                arguments[i].required = false;
+            }
         },
         isChecked: function() {
             return this.loginForm.elements["remember"].value;
