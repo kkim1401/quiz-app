@@ -25,15 +25,15 @@ function DragAndDrop(question) {
     this.correctAnswers = question.answers;
 }
 
-function inheritPrototype() {
-    for (var i = 0; i < arguments.length; i++) {
-        var prototype = Object.create(Question);
-        prototype.constructor = arguments[i];
-        arguments[i].prototype = prototype;
-    }
+function inheritPrototype(parentClass, childClass) {
+        var prototype = Object.create(parentClass);
+        prototype.constructor = childClass;
+        childClass.prototype = prototype;
 }
 
-inheritPrototype(MultipleChoice, FillInTheBlank, DragAndDrop);
+inheritPrototype(Question, MultipleChoice);
+inheritPrototype(Question, FillInTheBlank);
+inheritPrototype(Question, DragAndDrop);
 
 MultipleChoice.prototype.evaluate = function(index) {
     this.chosenIndex = index;
@@ -45,7 +45,7 @@ FillInTheBlank.prototype.evaluate = function(answer) {
 };
 
 DragAndDrop.prototype.evaluate = function(items) {
-    this.correct = this.correctAnswers === items;
+    this.correct = this.correctAnswers.toString() === items.toString();
 };
 
 function Subject() {
@@ -129,32 +129,38 @@ function QuizController(view, model) {
     var DOM = view.getDOM(),
         clickHandler = null;
     //To stop the quiz from refreshing when pressing enter.
-    DOM.quiz.addEventListener("submit", function(){
+    DOM.quiz.on("submit", function(){
         event.preventDefault();
     });
+    DOM.quiz.on("dragstart", ".item", handleDragStart)
+        .on("dragend", ".item", handleDragEnd)
+        .on("dragover", "input[name='item-blank']", handleDragOver)
+        .on("dragenter", "input[name='item-blank']", handleDragEnter)
+        .on("drop", "input[name='item-blank']", handleDrop);
     function process(question)
     {
         switch(question.constructor)
         {
             case MultipleChoice:
-                DOM.choices.forEach(function (choice, count) {
-                    if (choice.checked) {
-                        question.evaluate(count);
+                DOM.getChoices().each(function (index) {
+                    if (this.checked) {
+                        question.evaluate(index);
                     }
                 });
+                //console.log(question.question);
                 break;
             case FillInTheBlank:
+                var blank = DOM.getBlank().val() || "";
                 //Results in error if going back while leaving answer blank, since value is undefined.
-                question.evaluate(DOM.getBlank().value);
+                question.evaluate(blank);
+                //console.log(question.question);
                 break;
-            /*case DragAndDrop:
-                var items = Array.prototype.concat(DOM.getItemBlank());
-                var values = items.map(function(item, index) {
-                    return item.values;
-                });
-                question.evaluate(values);
+            case DragAndDrop:
+                question.evaluate(DOM.getItemBlank().map(function() {
+                    return this.value;
+                }).get());
+                //console.log(question.question);
                 break;
-                */
             default:
                 break;
         }
@@ -163,20 +169,26 @@ function QuizController(view, model) {
         switch (event.target) {
             case DOM.getNext():
                     //Have to check for validity since HTML5 validation API won't work for click events.
-                    if (DOM.quiz.checkValidity()) {
+                    if (DOM.quiz[0].checkValidity()) {
                         process(data);
-                        $fade(DOM.$quiz, "fast", model.nextQuestion);
+                        //$fade method calls model.nextQuestion after screen fades out (but before the screen fades in).
+                        //Clickhandler is therefore removed before the model notifies the controller/view with new question.
+                        $fade(DOM.quiz, "fast", model.nextQuestion);
                     }
                     else {
                         alert("Please answer the question.");
-                        //Need to return so that removeEventListener after switch will not be reached.
+                        //Need to return so that the removal of the click handler after switch will not be reached.
                         return;
                     }
                 break;
             case DOM.getBack():
                 if (model.getQuestionNumber() > 0) {
+                    //If required blank field is not filled in,
+                    //then going back will for some reason have the browser ask to fill the field out.
+                    //Temporarily setting the input's required to false will help fix this issue.
+                    $("input:required").prop("required", false);
                     process(data);
-                    model.back();
+                    $fade(DOM.quiz, "fast", model.back);
                 }
                 else {
                     alert("This is the first question!");
@@ -186,81 +198,60 @@ function QuizController(view, model) {
             case DOM.getTryAgain():
                 location.reload();
                 break;
-            default:
-                //Ignore unimportant clicks.
-                return;
         }
-        DOM.quiz.removeEventListener("click", clickHandler, false);
+        DOM.quiz.off("click");
     }
     function handleDragStart(event) {
-        if (event.target.className = "item") {
-            console.log("drag start");
-            event.dataTransfer.setData("text", event.target.firstChild.data);
-            event.dataTransfer.effectAllowed = "copy";
-            console.log(event.dataTransfer.getData("text"));
-        }
+        $("input[name='item-blank']", ".quiz").prop("readonly", false);
+        event.originalEvent.dataTransfer.setData("text", event.target.firstChild.data);
+    }
+    function handleDragEnd() {
+        $("input[name='item-blank']", ".quiz").prop("readonly", true);
     }
     function handleDragOver(event) {
-            console.log("drag over");
-            event.preventDefault();
-            event.dataTransfer.dropEffect = "copy";
+        event.preventDefault();
     }
     function handleDragEnter(event) {
-            console.log("drag enter");
-            event.preventDefault();
+        event.preventDefault();
+        event.originalEvent.dataTransfer.dropEffect = "copy";
     }
     function handleDrop(event) {
-            console.log("drop");
-            var data = event.dataTransfer.getData("text");
-            event.target.value = data;
+        event.target.value = event.originalEvent.dataTransfer.getData("text");
     }
     return {
         notify: function () {
             var question = model.getQuestion() || null;
             clickHandler = handleClick.bind(null, question);
-            //I might see if I can just add the click handler in the controller's initialization and somehow pass a new question to it so that I won't have to keep adding/removing an event listener every time.
-            DOM.quiz.addEventListener("click", clickHandler, false);
-
-            //I want to find another way of adding event listeners for drag events. Delegating the events to the parent node results in some weird errors, but I also don't like attaching them individually. Where should I remove these?
-            /*if (question.constructor = DragAndDrop) {
-                DOM.quiz.addEventListener("dragstart", handleDragStart, false);
-                DOM.getItemBlank().forEach(function (itemblank) {
-                    itemblank.addEventListener("dragover", handleDragOver, false);
-                    itemblank.addEventListener("dragenter", handleDragEnter, false);
-                    itemblank.addEventListener("drop", handleDrop, false);
-                });
-            }*/
+            //I might see if I can just add the click handler in the controller's initialization.
+            DOM.quiz.on("click", "button", clickHandler);
         }
     }
 }
 
 function QuizView(model) {
     var DOM = {
-            $quiz: $(".quiz").find("form"),
-            quiz: document.forms[1],
-            fieldset: document.forms[1].getElementsByTagName("fieldset")[0],
-            choices: document.getElementsByName("choices"),
-            items: document.forms[1].elements["item"],
-        /* The following properties are functions since their return values do not exist when this DOM object is initialized.
-        DOM.choices get a pass since it returns a NodeList.
-         */
+            quiz: $("form", ".quiz"),
+            fieldset: $("fieldset", ".quiz"),
+            getItems: function() {
+                return $(".items", ".quiz");
+            },
+            getChoices: function () {
+                return $("input[name='choices']", ".quiz");
+            },
             getNext: function() {
-                return document.getElementsByName("next")[0];
+                return $("button[name='next']", ".quiz")[0];
             },
             getBack: function(){
-                return document.getElementsByName("back")[0];
+                return $("button[name='back']", ".quiz")[0];
             },
             getTryAgain: function() {
-                return document.getElementsByName("try-again")[0];
+                return $("button[name='try-again']", ".quiz")[0];
             },
             getBlank: function() {
-                return document.forms[1].elements["blank"];
+                return $("input[name='blank']", ".quiz");
             },
             getItemBlank: function() {
-                return document.forms[1].elements["item-blank"];
-            },
-            getItemsList: function() {
-                return document.getElementsByClassName("items-list")[0];
+                return $("input[name='item-blank']", ".quiz");
             }
         },
         template = Handlebars.compile(document.getElementById("quiz-template").innerHTML);
@@ -326,7 +317,7 @@ function QuizView(model) {
             return DOM;
         },
         notify: function () {
-            DOM.fieldset.innerHTML = template(getData());
+            DOM.fieldset.html(template(getData()));
         }
     };
 }
@@ -487,7 +478,7 @@ function LoginView() {
         titleSection: document.getElementsByClassName("title")[0],
         fieldset: document.forms[0].getElementsByTagName("fieldset")[0],
         loginButton: document.getElementsByClassName("title")[0].querySelector("button[name='login']"),
-        registerButton: document.getElementsByClassName("title")[0].querySelector("button[name='register]"),
+        registerButton: document.getElementsByClassName("title")[0].querySelector("button[name='register']"),
         adminButton: document.getElementsByClassName("title")[0].querySelector("button[name='admin']"),
         getStartButton: function() {
             return document.getElementsByName("start")[0];
