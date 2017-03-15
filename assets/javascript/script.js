@@ -147,19 +147,15 @@ function QuizController(view, model) {
                         question.evaluate(index);
                     }
                 });
-                //console.log(question.question);
                 break;
             case FillInTheBlank:
                 var blank = DOM.getBlank().val() || "";
-                //Results in error if going back while leaving answer blank, since value is undefined.
                 question.evaluate(blank);
-                //console.log(question.question);
                 break;
             case DragAndDrop:
                 question.evaluate(DOM.getItemBlank().map(function() {
                     return this.value;
                 }).get());
-                //console.log(question.question);
                 break;
             default:
                 break;
@@ -171,9 +167,9 @@ function QuizController(view, model) {
                     //Have to check for validity since HTML5 validation API won't work for click events.
                     if (DOM.quiz[0].checkValidity()) {
                         process(data);
-                        //$fade method calls model.nextQuestion after screen fades out (but before the screen fades in).
+                        //Fade method calls model.nextQuestion after screen fades out (but before the screen fades in).
                         //Clickhandler is therefore removed before the model notifies the controller/view with new question.
-                        $fade(DOM.quiz, "fast", model.nextQuestion);
+                        DOM.fade(DOM.quiz, "fast", model.nextQuestion);
                     }
                     else {
                         alert("Please answer the question.");
@@ -183,12 +179,11 @@ function QuizController(view, model) {
                 break;
             case DOM.getBack():
                 if (model.getQuestionNumber() > 0) {
-                    //If required blank field is not filled in,
-                    //then going back will for some reason have the browser ask to fill the field out.
-                    //Temporarily setting the input's required to false will help fix this issue.
+                    //Temporarily setting the input's required to false helps resolve the issue of the browser
+                    //constantly notifying the user that a field should be filled in.
                     $("input:required").prop("required", false);
                     process(data);
-                    $fade(DOM.quiz, "fast", model.back);
+                    DOM.fade(DOM.quiz, "fast", model.back);
                 }
                 else {
                     alert("This is the first question!");
@@ -252,9 +247,13 @@ function QuizView(model) {
             },
             getItemBlank: function() {
                 return $("input[name='item-blank']", ".quiz");
+            },
+            fade: function($, speed, fn) {
+                $.fadeOut(speed, fn);
+                $.fadeIn(speed);
             }
         },
-        template = Handlebars.compile(document.getElementById("quiz-template").innerHTML);
+        template = Handlebars.compile($("#quiz-template").html());
     Handlebars.registerHelper("getQuestion", function(options) {
         if (this.items) {
             return this.question.split(" ").reduce(function(acc, val) {
@@ -322,11 +321,6 @@ function QuizView(model) {
     };
 }
 
-function $fade($, speed, fn1, fn2) {
-    $.fadeOut(speed, fn1);
-    $.fadeIn(speed, fn2);
-}
-
 function LoginModel() {
     var subject = new Subject(),
         date;
@@ -345,12 +339,14 @@ function LoginModel() {
           return localStorage.getItem(user);
         },
         setCookie: function(user, pass) {
-            document.cookie = encodeURIComponent("data") + "=" + encodeURIComponent(user) + "=" +
-                encodeURIComponent(pass) + "; expires=" + date.toDateString();
+            document.cookie = encodeURIComponent("data") + "=" + encodeURIComponent(user) + "="
+                + encodeURIComponent(pass) + "; expires=" + date.toDateString();
         },
         getCookie: {
-                user: document.cookie ? document.cookie.substring(5, document.cookie.indexOf("=", 5)) : "",
-                pass: document.cookie ? document.cookie.substring(document.cookie.lastIndexOf("=") + 1, document.cookie.length) : ""
+            user: document.cookie
+                ? document.cookie.substring(5, document.cookie.indexOf("=", 5)) : "",
+            pass: document.cookie
+                ? document.cookie.substring(document.cookie.lastIndexOf("=") + 1, document.cookie.length) : ""
         },
         register: function (args) {
             subject.removeAll();
@@ -364,9 +360,9 @@ function LoginModel() {
 function LoginPresenter(view, model) {
     var DOM = view.getDOM(),
         subject = new Subject();
-    DOM.loginForm.addEventListener("submit", function(event) {
+    DOM.loginForm.on("submit", function(event) {
         event.preventDefault();
-    }, false);
+    });
     function handleClickInTitle(event) {
         switch(event.target) {
             case DOM.loginButton:
@@ -397,27 +393,20 @@ function LoginPresenter(view, model) {
                 return;
         }
         subject.notifyObservers();
-        $fade(DOM.$login, "400", function() {
-            DOM.titleSection.style.visibility = "hidden";
-            DOM.loginSection.style.visibility = "visible";
-        });
+        DOM.fade(DOM.loginSection, "400", DOM.titleSection, DOM.loginSection);
     }
-    //Works but there's a lot of logic here that looks like it can be broken up.
     function handleClickInLogin(event) {
         switch(event.target) {
             case DOM.getStartButton():
                 //Need to dynamically set required boolean to avoid focus errors when toggling visibility.
                 DOM.setRequired(DOM.getUsernameElement(), DOM.getPasswordElement());
-                if (DOM.loginForm.checkValidity()) {
+                if (DOM.loginForm[0].checkValidity()) {
                     if (model.isUser(DOM.getUsernameElement().value, DOM.getPasswordElement().value)) {
                         model.setDate();
                         if (DOM.isChecked()) {
                             model.setCookie(DOM.getUsernameElement().value, DOM.getPasswordElement().value);
                         }
-                        $fade(DOM.$login, "400", function () {
-                            DOM.loginSection.style.visibility = "hidden";
-                            DOM.quizSection.style.visibility = "visible";
-                        });
+                        DOM.fade(DOM.loginSection, "400", DOM.loginSection, DOM.quizSection);
                     }
                     else {
                         alert("Can't recognize username or password.");
@@ -430,7 +419,7 @@ function LoginPresenter(view, model) {
                 break;
             case DOM.getJoinButton():
                 DOM.setRequired(DOM.getUsernameElement(), DOM.getPasswordElement(), DOM.getConfirmPasswordElement());
-                if (DOM.loginForm.checkValidity()) {
+                if (DOM.loginForm[0].checkValidity()) {
                     if (DOM.getPasswordElement().value === DOM.getConfirmPasswordElement().value) {
                         if (!model.userExists(DOM.getUsernameElement().value)) {
                             model.storeCredentials(DOM.getUsernameElement().value, DOM.getPasswordElement().value);
@@ -450,15 +439,14 @@ function LoginPresenter(view, model) {
                 DOM.setUnrequired(DOM.getUsernameElement(), DOM.getPasswordElement(), DOM.getConfirmPasswordElement());
                 break;
             case DOM.getBackButton():
-                DOM.loginSection.style.visibility = "hidden";
-                DOM.titleSection.style.visibility = "visible";
+                DOM.fade(DOM.loginSection, "200", DOM.loginSection, DOM.titleSection);
                 break;
             default:
                 break;
         }
     }
-    DOM.titleSection.addEventListener("click", handleClickInTitle, false);
-    DOM.loginSection.addEventListener("click", handleClickInLogin, false);
+    DOM.titleSection.on("click", handleClickInTitle);
+    DOM.loginSection.on("click", handleClickInLogin);
     return {
         register: function (args) {
             subject.removeAll();
@@ -471,38 +459,37 @@ function LoginPresenter(view, model) {
 
 function LoginView() {
     var DOM = {
-        $login: $(".login"),
-        loginForm: document.forms[0],
-        loginSection: document.getElementsByClassName("login")[0],
-        quizSection: document.getElementsByClassName("quiz")[0],
-        titleSection: document.getElementsByClassName("title")[0],
-        fieldset: document.forms[0].getElementsByTagName("fieldset")[0],
-        loginButton: document.getElementsByClassName("title")[0].querySelector("button[name='login']"),
-        registerButton: document.getElementsByClassName("title")[0].querySelector("button[name='register']"),
-        adminButton: document.getElementsByClassName("title")[0].querySelector("button[name='admin']"),
+        loginForm: $("form", ".login"),
+        loginSection: $(".login"),
+        quizSection: $(".quiz"),
+        titleSection: $(".title"),
+        fieldset: $("fieldset", ".login"),
+        loginButton: $("button[name='login']", ".title")[0],
+        registerButton: $("button[name='register']", ".title")[0],
+        adminButton: $("button[name='admin']", ".title")[0],
         getStartButton: function() {
-            return document.getElementsByName("start")[0];
+            return $("button[name='start']", ".login")[0];
         },
         getJoinButton: function() {
-            return document.getElementsByName("join")[0];
+            return $("button[name='join']", ".login")[0];
         },
         getBackButton: function() {
-            return document.getElementsByName("back")[0];
+            return $("button[name='back']", ".login")[0];
         },
         getUsernameElement: function() {
-            return this.loginForm.elements["username"];
+            return $("input[name='username']", ".login")[0];
         },
         getPasswordElement: function() {
-            return this.loginForm.elements["password"];
+            return $("input[name='password']", ".login")[0];
         },
         getConfirmPasswordElement: function() {
-            return this.loginForm.elements["confirm-password"];
+            return $("input[name='confirm-password']", ".login")[0];
         },
         setUsername: function(user) {
-            this.loginForm.elements["username"].value = user;
+            $("input[name='username']", ".login").val(user);
         },
         setPassword: function(pass) {
-            this.loginForm.elements["password"].value = pass;
+            $("input[name='password']", ".login").val(pass);
         },
         setRequired: function(args) {
             for (var i = 0; i < arguments.length; i++) {
@@ -515,17 +502,24 @@ function LoginView() {
             }
         },
         isChecked: function() {
-            return this.loginForm.elements["remember"].value;
+            return $("input[name='remember']", ".login").val();
+        },
+        fade: function($, speed, hidden, visible) {
+            $.fadeOut(speed, function() {
+                hidden.css("visibility", "hidden");
+                visible.css("visibility", "visible");
+            });
+            $.fadeIn(speed);
         }
     },
-        template = Handlebars.compile(document.getElementById("login-template").innerHTML);
+        template = Handlebars.compile($("#login-template").html());
     DOM.fieldset.innerHTML = template({});
     return {
         getDOM: function() {
             return DOM;
         },
         notify: function() {
-            DOM.fieldset.innerHTML = template({});
+            DOM.fieldset.html(template({}));
         }
 
     }
