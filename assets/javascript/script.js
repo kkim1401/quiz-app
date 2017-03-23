@@ -26,9 +26,9 @@ function DragAndDrop(question) {
 }
 
 function inheritPrototype(parentClass, childClass) {
-        var prototype = Object.create(parentClass);
-        prototype.constructor = childClass;
-        childClass.prototype = prototype;
+    const prototype = Object.create(parentClass);
+    prototype.constructor = childClass;
+    childClass.prototype = prototype;
 }
 
 inheritPrototype(Question, MultipleChoice);
@@ -48,7 +48,7 @@ DragAndDrop.prototype.evaluate = function(items) {
     this.correct = this.correctAnswers.toString() === items.toString();
 };
 
-var Constants = {
+const Constants = {
     QUIZ_UNANSWERED_MSG: "Please answer the question.",
     QUIZ_FIRST_QUESTION_MSG: "This is the first question!",
     LOGIN_UNRECOGNIZABLE_MSG: "Can't recognize username or password.",
@@ -62,7 +62,7 @@ var Constants = {
 };
 
 function Subject() {
-    var observers = [];
+    const observers = [];
     return {
         add: function (observer) {
             observers.push(observer);
@@ -71,7 +71,7 @@ function Subject() {
             observers.length = 0;
         },
         notifyObservers: function () {
-            observers.forEach(function (observer) {
+            observers.forEach(observer => {
                 observer.notify();
             });
         }
@@ -79,9 +79,9 @@ function Subject() {
 }
 
 function QuizModel() {
-    var subject = Subject(),
-        questions = [],
-        numberCorrect = 0,
+    const subject = Subject(),
+        questions = [];
+    let numberCorrect = 0,
         totalNumber = 0,
         questionNumber = 0;
     return {
@@ -96,7 +96,7 @@ function QuizModel() {
         },
         addQuestion: function (data) {
             //I may chunk the array if this loop starts taking too long.
-            data.forEach(function(item) {
+            data.forEach(item => {
                 switch (true) {
                     case "choices" in item:
                         questions.push(new MultipleChoice(item));
@@ -124,7 +124,7 @@ function QuizModel() {
             return totalNumber;
         },
         getNumberCorrect: function () {
-            questions.forEach(function(item) {
+            questions.forEach(item => {
                 if (item.correct) {
                     numberCorrect++;
                 }
@@ -132,21 +132,20 @@ function QuizModel() {
             return numberCorrect;
         },
         //Maybe make an abstract model for register function?
-        register: function (args) {
+        register: function (...args) {
             subject.removeAll();
-            for (var i = 0; i < arguments.length; i++) {
-                subject.add(arguments[i]);
-            }
+            args.forEach(item => {
+                subject.add(item);
+            });
         }
     }
 }
 
 function QuizController(view, model) {
-    var DOM = view.getDOM(),
-        clickHandler = null,
+    const DOM = view.getDOM(),
         constants = Constants;
     //To stop the quiz from refreshing when pressing enter.
-    DOM.$quiz.on("submit", function(){
+    DOM.$quiz.on("submit", event => {
         event.preventDefault();
     });
     DOM.$quiz.on("dragstart", ".item", handleDragStart)
@@ -166,13 +165,11 @@ function QuizController(view, model) {
                 });
                 break;
             case FillInTheBlank:
-                var blank = DOM.get$Blank().val() || "";
+                const blank = DOM.get$Blank().val() || "";
                 question.evaluate(blank);
                 break;
             case DragAndDrop:
-                question.evaluate(DOM.get$ItemBlank().map(function() {
-                    return this.value;
-                }).get());
+                question.evaluate(DOM.get$ItemBlank().map((index, elem) => elem.value).get());
                 break;
             default:
                 break;
@@ -181,18 +178,18 @@ function QuizController(view, model) {
     function handleClick (data, event) {
         switch (event.target) {
             case DOM.getNext():
-                    //Have to check for validity since HTML5 validation API won't work for click events.
-                    if (DOM.$quiz[0].checkValidity()) {
-                        process(data);
-                        //Fade method calls model.nextQuestion after screen fades out (but before the screen fades in).
-                        //Clickhandler is therefore removed before the model notifies the controller/view with new question.
-                        DOM.fade(DOM.$quiz, constants.FAST_SPEED, model.nextQuestion);
-                    }
-                    else {
-                        alert(constants.QUIZ_UNANSWERED_MSG);
-                        //Need to return so that the removal of the click handler after switch will not be reached.
-                        return;
-                    }
+                //Have to check for validity since HTML5 validation API won't work for click events.
+                if (DOM.$quiz[0].checkValidity()) {
+                    process(data);
+                    //Fade method calls model.nextQuestion after screen fades out (but before the screen fades in).
+                    //Clickhandler is therefore removed before the model notifies the controller/view with new question.
+                    DOM.fade(DOM.$quiz, constants.FAST_SPEED, model.nextQuestion);
+                }
+                else {
+                    alert(constants.QUIZ_UNANSWERED_MSG);
+                    //Need to return so that the removal of the click handler after switch will not be reached.
+                    return;
+                }
                 break;
             case DOM.getBack():
                 if (model.getQuestionNumber() > 0) {
@@ -232,16 +229,15 @@ function QuizController(view, model) {
     }
     return {
         notify: function () {
-            var question = model.getQuestion() || null;
-            clickHandler = handleClick.bind(null, question);
+            const question = model.getQuestion() || null;
             //I might see if I can just add the click handler in the controller's initialization.
-            DOM.$quiz.on("click", "button", clickHandler);
+            DOM.$quiz.on("click", "button", handleClick.bind(null, question));
         }
     }
 }
 
 function QuizView(model) {
-    var DOM = {
+    const DOM = {
             $quiz: $("form", ".quiz"),
             $fieldset: $("fieldset", ".quiz"),
             get$Choices: function () {
@@ -270,7 +266,7 @@ function QuizView(model) {
         template = Handlebars.compile($("#quiz-template").html());
     Handlebars.registerHelper("getQuestion", function(options) {
         if (this.items) {
-            return this.question.split(" ").reduce(function(acc, val) {
+            return this.question.split(" ").reduce((acc, val) => {
                 if (val.includes("___")) {
                     val = "<input type='text' name='item-blank' readonly>" + val.substring(3) || "";
                 }
@@ -282,7 +278,7 @@ function QuizView(model) {
         }
     });
     function getData() {
-        var question = model.getQuestion();
+        const question = model.getQuestion();
         function checkTest(index) {
             return index === question.chosenIndex ? "checked": "";
         }
@@ -293,12 +289,8 @@ function QuizView(model) {
                         question: question.question,
                         number: model.getQuestionNumber() + 1,
                         total: model.getTotalNumber(),
-                        choices: question.answerChoices.map(function (item, index) {
-                            return {
-                                choice: item,
-                                checked: checkTest(index)
-                            };
-                        })
+                        choices: question.answerChoices.map((item, index) =>
+                            ({choice: item, checked: checkTest(index)}))
                     };
                     break;
                 case FillInTheBlank:
@@ -337,8 +329,8 @@ function QuizView(model) {
 }
 
 function LoginModel() {
-    var subject = new Subject(),
-        date;
+    const subject = new Subject();
+    let date;
     return {
         storeCredentials: function(user, pass) {
             localStorage.setItem(user, pass);
@@ -348,10 +340,10 @@ function LoginModel() {
             date.setDate(date.getDate() + 1);
         },
         isUser: function(user, pass) {
-          return localStorage.getItem(user) === pass;
+            return localStorage.getItem(user) === pass;
         },
         userExists: function(user) {
-          return localStorage.getItem(user);
+            return localStorage.getItem(user);
         },
         setCookie: function(user, pass) {
             document.cookie = encodeURIComponent("data") + "=" + encodeURIComponent(user) + "="
@@ -363,20 +355,20 @@ function LoginModel() {
             pass: document.cookie
                 ? document.cookie.substring(document.cookie.lastIndexOf("=") + 1, document.cookie.length) : ""
         },
-        register: function (args) {
+        register: function (...args) {
             subject.removeAll();
-            for (var i = 0; i < arguments.length; i++) {
-                subject.add(arguments[i]);
-            }
+            args.forEach(item => {
+                subject.add(item);
+            });
         }
     }
 }
 
 function LoginPresenter(view, model) {
-    var DOM = view.getDOM(),
+    const DOM = view.getDOM(),
         subject = new Subject(),
         constants = Constants;
-    DOM.$loginForm.on("submit", function(event) {
+    DOM.$loginForm.on("submit", event => {
         event.preventDefault();
     });
     function handleClickInTitle(event) {
@@ -399,11 +391,11 @@ function LoginPresenter(view, model) {
                 break;
             case DOM.adminButton:
                 /*
-                Handlebars.registerHelper("admin", function(options) {
-                    //Helper need to last only for this screen.
-                    Handlebars.unregisterHelper("login");
-                    return options.fn(this);
-                });
+                 Handlebars.registerHelper("admin", function(options) {
+                 //Helper need to last only for this screen.
+                 Handlebars.unregisterHelper("login");
+                 return options.fn(this);
+                 });
                  subject.notifyObservers();
                  */
                 break;
@@ -428,7 +420,7 @@ function LoginPresenter(view, model) {
         }
     }
     function login() {
-        var usernameElement = DOM.getUsernameElement(),
+        const usernameElement = DOM.getUsernameElement(),
             passwordElement = DOM.getPasswordElement(),
             username = usernameElement.value,
             password = passwordElement.value;
@@ -452,7 +444,7 @@ function LoginPresenter(view, model) {
         DOM.setUnrequired(usernameElement, passwordElement);
     }
     function register() {
-        var usernameElement = DOM.getUsernameElement(),
+        const usernameElement = DOM.getUsernameElement(),
             passwordElement = DOM.getPasswordElement(),
             confirmPasswordElement = DOM.getConfirmPasswordElement(),
             username = usernameElement.value,
@@ -481,68 +473,64 @@ function LoginPresenter(view, model) {
     DOM.$titleSection.on("click", handleClickInTitle);
     DOM.$loginSection.on("click", handleClickInLogin);
     return {
-        register: function (args) {
+        register: function (...args) {
             subject.removeAll();
-            for (var i = 0; i < arguments.length; i++) {
-                subject.add(arguments[i]);
-            }
+            args.forEach(item => {
+                subject.add(item);
+            });
         }
     }
 }
 
 function LoginView() {
-    var DOM = {
-        $loginForm: $("form", ".login"),
-        $loginSection: $(".login"),
-        $quizSection: $(".quiz"),
-        $titleSection: $(".title"),
-        $fieldset: $("fieldset", ".login"),
-        loginButton: $("button[name='login']", ".title")[0],
-        registerButton: $("button[name='register']", ".title")[0],
-        adminButton: $("button[name='admin']", ".title")[0],
-        getStartButton: function() {
-            return $("button[name='start']", ".login")[0];
-        },
-        getJoinButton: function() {
-            return $("button[name='join']", ".login")[0];
-        },
-        getBackButton: function() {
-            return $("button[name='back']", ".login")[0];
-        },
-        getUsernameElement: function() {
-            return $("input[name='username']", ".login")[0];
-        },
-        getPasswordElement: function() {
-            return $("input[name='password']", ".login")[0];
-        },
-        getConfirmPasswordElement: function() {
-            return $("input[name='confirm-password']", ".login")[0];
-        },
-        setUser: function(user) {
-            $("input[name='username']", ".login").val(user.user);
-            $("input[name='password']", ".login").val(user.pass);
-        },
-        setRequired: function(args) {
-            for (var i = 0; i < arguments.length; i++) {
-                arguments[i].required = true;
+    const DOM = {
+            $loginForm: $("form", ".login"),
+            $loginSection: $(".login"),
+            $quizSection: $(".quiz"),
+            $titleSection: $(".title"),
+            $fieldset: $("fieldset", ".login"),
+            loginButton: $("button[name='login']", ".title")[0],
+            registerButton: $("button[name='register']", ".title")[0],
+            adminButton: $("button[name='admin']", ".title")[0],
+            getStartButton: function() {
+                return $("button[name='start']", ".login")[0];
+            },
+            getJoinButton: function() {
+                return $("button[name='join']", ".login")[0];
+            },
+            getBackButton: function() {
+                return $("button[name='back']", ".login")[0];
+            },
+            getUsernameElement: function() {
+                return $("input[name='username']", ".login")[0];
+            },
+            getPasswordElement: function() {
+                return $("input[name='password']", ".login")[0];
+            },
+            getConfirmPasswordElement: function() {
+                return $("input[name='confirm-password']", ".login")[0];
+            },
+            setUser: function(user) {
+                $("input[name='username']", ".login").val(user.user);
+                $("input[name='password']", ".login").val(user.pass);
+            },
+            setRequired: function(...args) {
+                args.forEach(item => {item.required = true;})
+            },
+            setUnrequired: function(...args) {
+                args.forEach(item => {item.required = false;})
+            },
+            isChecked: function() {
+                return $("input[name='remember']", ".login").val();
+            },
+            fade: function($, speed, hidden, visible) {
+                $.fadeOut(speed, function() {
+                    hidden.css("visibility", "hidden");
+                    visible.css("visibility", "visible");
+                });
+                $.fadeIn(speed);
             }
         },
-        setUnrequired: function(args) {
-            for (var i = 0; i < arguments.length; i++) {
-                arguments[i].required = false;
-            }
-        },
-        isChecked: function() {
-            return $("input[name='remember']", ".login").val();
-        },
-        fade: function($, speed, hidden, visible) {
-            $.fadeOut(speed, function() {
-                hidden.css("visibility", "hidden");
-                visible.css("visibility", "visible");
-            });
-            $.fadeIn(speed);
-        }
-    },
         template = Handlebars.compile($("#login-template").html());
     DOM.$fieldset.innerHTML = template({});
     return {
@@ -557,7 +545,7 @@ function LoginView() {
 }
 
 (function() {
-    var loginModel = LoginModel(),
+    const loginModel = LoginModel(),
         loginView = LoginView(),
         loginPresenter = LoginPresenter(loginView, loginModel),
         quizModel = QuizModel(),
@@ -568,7 +556,7 @@ function LoginView() {
     loginPresenter.register(loginView);
     request.open("GET", Constants.JSON_PATH, true);
     request.setRequestHeader("Content-type", "application/json");
-    request.onreadystatechange = function() {
+    request.onreadystatechange = () => {
         if (request.readyState == 4 && request.status == 200) {
             quizModel.addQuestion(JSON.parse(request.responseText));
         }

@@ -14,6 +14,10 @@
     "answer": "No"
   },
   {
+    "question": "How many fingers do humans have on each hand?",
+    "answer": "5"
+  },
+  {
     "question": "What do powerlifters specialize?",
     "choices": ["Back Squat", "Curls", "Pull-ups"],
     "correctIndex": 0
