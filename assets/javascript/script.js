@@ -97,14 +97,14 @@ function QuizModel() {
         addQuestion: function (data) {
             //I may chunk the array if this loop starts taking too long.
             data.forEach(item => {
-                switch (true) {
-                    case "choices" in item:
+                switch (item.type) {
+                    case "multiple-choice":
                         questions.push(new MultipleChoice(item));
                         break;
-                    case "answer" in item:
+                    case "fill-in-the-blank":
                         questions.push(new FillInTheBlank(item));
                         break;
-                    case "items" in item:
+                    case "drag-and-drop":
                         questions.push(new DragAndDrop((item)));
                         break;
                 }
@@ -286,6 +286,7 @@ function QuizView(model) {
             switch (question.constructor){
                 case MultipleChoice:
                     return {
+                        type: question.type,
                         question: question.question,
                         number: model.getQuestionNumber() + 1,
                         total: model.getTotalNumber(),
@@ -295,6 +296,7 @@ function QuizView(model) {
                     break;
                 case FillInTheBlank:
                     return {
+                        type: question.type,
                         question: question.question,
                         number: model.getQuestionNumber() + 1,
                         total: model.getTotalNumber(),
@@ -303,10 +305,11 @@ function QuizView(model) {
                     break;
                 case DragAndDrop:
                     return {
+                        type: question.type,
                         question: question.question,
                         number: model.getQuestionNumber() + 1,
-                        items: question.items,
-                        total: model.getTotalNumber()
+                        total: model.getTotalNumber(),
+                        items: question.items
                     };
                     break;
             }

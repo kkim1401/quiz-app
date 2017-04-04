@@ -2,34 +2,41 @@
   {
     "question": "Kevin ___ is a ___.",
     "items": ["Lee", "Kim", "Chan", "weightlifter", "powerlifter"],
-    "answers": ["Kim", "powerlifter"]
+    "answers": ["Kim", "powerlifter"],
+    "type": "drag-and-drop"
   },
   {
     "question": "What is the color of the sky?",
     "choices": ["Red", "Blue", "Orange", "Purple"],
-    "correctIndex": 1
+    "correctIndex": 1,
+    "type": "multiple-choice"
   },
   {
     "question": "Do spiders have six legs?",
-    "answer": "No"
+    "answer": "No",
+    "type": "fill-in-the-blank"
   },
   {
     "question": "How many fingers do humans have on each hand?",
-    "answer": "5"
+    "answer": "5",
+    "type": "fill-in-the-blank"
   },
   {
     "question": "What do powerlifters specialize?",
     "choices": ["Back Squat", "Curls", "Pull-ups"],
-    "correctIndex": 0
+    "correctIndex": 0,
+    "type": "multiple-choice"
   },
   {
     "question":"What do bodybuilders specialize?",
     "choices": ["Back Squat", "Deadlifts", "Curls", "Tricep Extensions", "None of the Above"],
-    "correctIndex": 4
+    "correctIndex": 4,
+    "type": "multiple-choice"
   },
   {
     "question": "Which of the following is a compound exercise?",
     "choices": ["Curls", "Bench Press", "Leg Extensions"],
-    "correctIndex": 1
+    "correctIndex": 1,
+    "type": "multiple-choice"
   }
 ]

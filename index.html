@@ -2,10 +2,15 @@
 <html>
 <head>
     <title>My Quiz</title>
+    <meta charset="utf-8" >
     <link rel="stylesheet" href="assets/stylesheets/style.css">
     <script src="assets/javascript/script.js" defer></script>
+    <script src="assets/javascript/quiz-editor.js" type="text/babel" defer></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="assets/javascript/handlebars-v4.0.5.js"></script>
+    <script src="https://unpkg.com/react@15/dist/react.min.js"></script>
+    <script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 </head>
 <body>
 
@@ -69,7 +74,7 @@
 </script>
 
 <!--Title-->
-<section class="title">
+<section class="title" style="visibility:hidden">
     <div>
         <h1>Custom Quiz</h1>
         <button name="login">Login</button>
@@ -86,7 +91,7 @@
 </section>
 
 <!--Add Questions-->
-<section class="add-questions" style="visibility:hidden">
+<section class="quiz-editor">
 </section>
 
 <!--Quiz-->
