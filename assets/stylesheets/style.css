@@ -223,7 +223,33 @@ fieldset {
 
 /* Quiz Editor */
 
+.question-body {
+    width: 1000px;
+    margin-bottom: 50px;
+    border-top: 1px solid black;
+}
 
+.question, .question-type, .mult-choices, .mult-choices div, .correct-choice {
+    display: inline-block;
+}
+
+.question {
+    margin-left: 80px;
+}
+
+.question-type, .question-type select, .correct-choice  {
+    vertical-align: top;
+}
+
+.mult-choices {
+    margin-left: 120px;
+}
+
+button[name="delete"] {
+    position: relative;
+    bottom: 19px;
+
+}
 
 /* Hover and focus states */
 .label-choices:hover input ~ .radio-circle,

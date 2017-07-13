@@ -78,6 +78,8 @@ function Subject() {
     }
 }
 
+
+
 function QuizModel() {
     const subject = Subject(),
         questions = [];
